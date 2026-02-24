@@ -13,7 +13,7 @@ DATA_FILE_EXT = '.npy'
 # Maximum number of retry attempts to
 # generate a task set with utilization
 # below the period
-MAX_RETRY = 1000
+MAX_RETRY = 10_000
 
 # Collection of numbers of processors to use
 num_processors = np.array([8, 16])
@@ -94,15 +94,11 @@ for m in num_processors:
                 for j in range(u_values.shape[1]):
                     for l in range(u_values.shape[3]):
                         # Uniformly sample constrained deadlines
-                        try:
-                            val1 = 0.8 * periods[i, j, 0, l]
-                            val2 = c[i, j, 0, l]
-                            val3 = periods[i, j, 0, l]
+                        # val1 = 0.8 * periods[i, j, 0, l]
+                        # val2 = c[i, j, 0, l]
+                        # val3 = periods[i, j, 0, l]
 
-                            deadlines[i, j, 0, l] = rng.integers(low=max(0.8 * periods[i, j, 0, l], c[i, j, 0, l]), high=periods[i, j, 0, l], endpoint=True)
-                        except Exception as exc:
-                            pass
-                            # print(val1, val2, val3)
+                        deadlines[i, j, 0, l] = rng.integers(low=max(0.8 * periods[i, j, 0, l], c[i, j, 0, l]), high=periods[i, j, 0, l], endpoint=True)
 
             # Set implicit deadlines
             deadlines[:, :, 1] = periods[:, :, 1]
