@@ -1,5 +1,62 @@
 import numpy as np
 import queue
+import heapq
+
+class OrderedSet:
+    def __init__(self):
+        self.data = []
+        self.exists = set()
+
+    def __contains__(self, item):
+        return item in self.exists
+
+    def issubset(self, other: OrderedSet):
+        if isinstance(other, OrderedSet):
+            return self.exists.issubset(other.exists)
+        return self.exists.issubset(other)
+    
+    def add(self, item):
+        heapq.heappush(self.data, item)
+        self.exists.add(item)
+
+    def remove(self, item):
+        self.data.remove(item)
+        self.exists.remove(item)
+
+    def index(self, item):
+        left = 0
+        right = len(self.data) - 1
+
+        while left <= right:
+            mid = left + (right - left) // 2
+            if item == self.data[mid]:
+               return mid
+            elif item > self.data[mid]:
+                left = mid + 1
+            else:
+                right = mid - 1
+        return left
+    
+    def __getitem__(self, key: int):
+        if key < 0 or key >= len(self.data):
+            raise ValueError("Invalid access on OrderedSet")
+
+        return self.data[key]
+    
+    def subset(self, start: int, len: int):
+        if len <= 0:
+            raise ValueError("Length of subset must be positive")
+        if start < 0:
+            raise ValueError("Invalid start of subset")
+
+        sub = OrderedSet()
+        sub.data = self.data[start: start+len]
+        sub.exists.union(sub.data)
+
+        return sub
+    
+    def __len__(self):
+        return len(self.data)
 
 class Task:
     def __init__(self, m: int):
@@ -11,7 +68,7 @@ class Task:
 class Partition:
     def __init__(self, m: int, root: PartitionTree):
         self.m = m
-        self.tasks = []
+        self.tasks = OrderedSet()
 
         self.root = root
 
@@ -112,22 +169,22 @@ class PartitionForest:
             forest_partitions = forest_partitions + tree.parts
         return forest_partitions
 
-def higher_priority(task: Task, part: Partition) -> set:
-    pass
+def higher_priority(task: Task, part: Partition) -> OrderedSet:
+    part.tasks
 
-def compute_dhp(task: Task) -> set:
+def compute_dhp(task: Task) -> OrderedSet:
     partitions = task.partitions
-    dhp_task_set = set()
+    dhp_task_set = OrderedSet()
     for part in partitions:
         tasklist = higher_priority(task, part)
         dhp_task_set = dhp_task_set.union(tasklist)
     return dhp_task_set
 
-def compute_ihp(task: Task, dhp: set) -> set:
+def compute_ihp(task: Task, dhp: OrderedSet) -> OrderedSet:
     q = queue.Queue()
-    found = set()
+    found = OrderedSet()
 
-    ihp = set()
+    ihp = OrderedSet()
     for t in dhp:
         q.put(t)
         found.add(q)
@@ -145,8 +202,8 @@ def compute_ihp(task: Task, dhp: set) -> set:
             ihp.add(e)
     return ihp
 
-def compute_dhp_nocii(task, dhp: set) -> set:
-    dhp_noci = set()
+def compute_dhp_nocii(task, dhp: OrderedSet) -> OrderedSet:
+    dhp_noci = OrderedSet()
 
     for t in dhp:
         dhp_t = compute_dhp(t)
