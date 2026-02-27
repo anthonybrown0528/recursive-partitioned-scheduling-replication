@@ -1,6 +1,8 @@
 import numpy as np
 import queue
 
+import heapq
+
 class Task:
     def __init__(self, m: int):
         self.partitions = []
@@ -14,6 +16,24 @@ class Partition:
         self.tasks = []
 
         self.root = root
+
+    def add_task(self, task: Task):
+        heapq.heappush(self.tasks, task)
+
+    def greater_priority(self, task):
+        left = 0
+        right = len(task) - 1
+
+        while left <= right:
+            mid = left + (right - left) // 2
+            compared = self.tasks[mid]
+            if task == compared:
+                return self.tasks[:mid]
+            elif task > compared:
+                left = mid + 1
+            else:
+                right = mid - 1
+        return []
 
 class PartitionTree:
     def __init__(self, m: int):
@@ -112,14 +132,11 @@ class PartitionForest:
             forest_partitions = forest_partitions + tree.parts
         return forest_partitions
 
-def higher_priority(task: Task, part: Partition) -> set:
-    pass
-
 def compute_dhp(task: Task) -> set:
     partitions = task.partitions
     dhp_task_set = set()
     for part in partitions:
-        tasklist = higher_priority(task, part)
+        tasklist = part.greater_priority(task)
         dhp_task_set = dhp_task_set.union(tasklist)
     return dhp_task_set
 
