@@ -1,5 +1,6 @@
 import numpy as np
 import queue
+import math
 
 import heapq
 
@@ -109,7 +110,31 @@ class PartitionTree:
         for i, partition in enumerate(partition):
             self.task_partition_map[(task, partition)] = m_per_part[i]
 
+def compute_response_time_bound(task: Task, dhp: set, dhp_noci: set):
+    rr = task.c
+    interference = 0
 
+    for t in dhp:
+        term = 0
+        if t in dhp_noci:
+            term = math.ceil(rr / t.period) * t.c
+        else:
+            term = math.ceil((rr + t.r - t.c) / t.period) * t.c
+        interference = interference + term
+    rl = task.c + interference
+
+    while rl != rr and rl <= task.d:
+        rr = rl
+        interference = 0
+
+        for t in dhp:
+            term = 0
+            if t in dhp_noci:
+                term = None
+            else:
+                term = None
+            interference = interference + term
+        rl = task.c + interference
 
 class PartitionForest:
     def __init__(self, m: int):
