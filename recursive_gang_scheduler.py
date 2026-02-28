@@ -13,6 +13,8 @@ def recursive_gang_schedule(taskset: list[Task], m: int) -> tuple[bool, np.array
 
     # Attempt to schedule
     # each task sequentially
+    sorted_taskset = sorted(taskset, key=lambda x: (x.m, x.priority))
+
     for task in taskset:
         schedulable = False
         mi = task.m
