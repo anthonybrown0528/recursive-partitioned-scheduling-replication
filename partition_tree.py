@@ -66,7 +66,7 @@ class PartitionTree:
             proc_alloc = task_partition_map[task]
             schedulable = False
             for leaf in [pl, pr]:
-                self.add_task(task, [leaf], [task.m], proc_alloc)
+                self.add_task(task, [leaf], [proc_alloc], proc_alloc)
                 if leaf.m >= proc_alloc and is_schedulable(leaf.tasks):
                     schedulable = True
                     break

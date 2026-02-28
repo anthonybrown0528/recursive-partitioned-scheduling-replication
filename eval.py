@@ -66,8 +66,8 @@ for m in num_processors:
             
             another_ctr = 0
             for i, row in df.iterrows():
-                t = Task(row[data[2]], row[data[3]], row[data[4]], row[data[1]], row[data[4]])
-                t2 = Task(row[data[2]], row[data[3]], row[data[4]], row[data[1]], row[data[4]])
+                t = Task(round(row[data[2]]), row[data[3]], round(row[data[4]]), round(row[data[1]]), round(row[data[4]]))
+                t2 = Task(round(row[data[2]]), row[data[3]], round(row[data[4]]), round(row[data[1]]), round(row[data[4]]))
                 
                 taskset.append(t)
                 taskset2.append(t2)
