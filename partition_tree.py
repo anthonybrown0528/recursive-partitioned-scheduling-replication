@@ -17,11 +17,9 @@ class PartitionTree:
         self.parts = [Partition(m)] 
 
 
-    def create_subpartitions(self, i: int, tasklist: list[Task]):
-        if i < 0 or i >= len(self.parts):
-            raise ValueError("Invalid index for subpartition")
-
-        part = self.parts.pop(i)
+    def create_subpartitions(self, part: int):
+        tasklist = part.tasks 
+        self.parts.remove(part)
         task_queue = sorted(tasklist)
         
         # Find task with the least amount of threads
@@ -37,7 +35,7 @@ class PartitionTree:
         mk = 0
         for task in task_queue:
             mi = part.task_partition_map[task]
-            if m_min + mi > len(part.m):
+            if m_min + mi > part.m:
                 shared.append(task)
             else:
                 nonshared.append(task)
@@ -63,7 +61,6 @@ class PartitionTree:
                 self.add_task(task, [leaf], [task.m])
                 if leaf.m >= proc_alloc and is_schedulable(leaf.tasks):
                     schedulable = True
-                    self.add_task(task, [leaf], [proc_alloc])
                     break
                 self.remove_task(task, [leaf])
                 

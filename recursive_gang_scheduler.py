@@ -24,19 +24,21 @@ def recursive_gang_schedule(taskset: list[Task], m: int) -> tuple[bool, np.array
         for leaf, tree, part_idx in forest.leaves():
             tree.add_task(task, [leaf], [mi])
             if leaf.m >= mi and is_schedulable(leaf.tasks):
-                tree.add_task(task, [leaf], [mi])
                 schedulable = True
 
                 break
+            tree.remove_task(task, [leaf])
         if not schedulable and budget >= mi:
             added_tree = forest.create_tree(mi)
             added_tree.add_task(task, added_tree.parts, [mi])
 
+            budget = budget - mi
             schedulable = True
         elif not schedulable:
-            for leaf in forest.leaves():
-                if len(leaf.processors()) >= mi:
-                    success = tree.create_partitions(part_idx, leaf.tasks + task)
+            for leaf, tree, part_idx in forest.leaves():
+                if leaf.m >= mi:
+                    tree.add_task(task, [leaf], [task.m])
+                    success = tree.create_subpartitions(leaf)
                     
                     # Found a leaf partition which can be subpartitioned
                     # to fit the current task
@@ -47,6 +49,7 @@ def recursive_gang_schedule(taskset: list[Task], m: int) -> tuple[bool, np.array
 
                         # Stop searching for leaves to subpartition
                         break
+                    tree.remove_task(task, [leaf])
 
             # Terminate the algorithm prematurely
             # if any task cannot be scheduled
