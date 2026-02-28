@@ -1,11 +1,14 @@
+from functools import total_ordering
+
 import numpy as np
 import queue
 import math
 
 import heapq
 
+@total_ordering
 class Task:
-    def __init__(self, m: int, c: float, d: int, period: int):
+    def __init__(self, m: int, c: float, d: int, period: int, priority: int):
         self.partitions = []
 
         # Task parallelism
@@ -14,6 +17,19 @@ class Task:
         self.c = c
         self.d = d
         self.period = period
+
+        self.priority = priority
+
+    def __lt__(self, other):
+        self.priority < other.priority
+
+    def __eq__(self, other):
+        if not isinstance(other, Task):
+            return False
+        return (self.m, self.c, self.d, self.period, self.priority) == (other.m, other.c, other.d, other.period, other.priority)
+
+    def __hash__(self):
+        return hash((self.m, self.c, self.d, self.period, self.priority))
 
 class Partition:
     def __init__(self, m: int):
@@ -25,7 +41,7 @@ class Partition:
 
     def greater_priority(self, task):
         left = 0
-        right = len(task) - 1
+        right = len(self.tasks) - 1
 
         while left <= right:
             mid = left + (right - left) // 2
@@ -159,7 +175,7 @@ class PartitionForest:
     def leaves(self) -> list[Partition]:
         forest_partitions = []
         for tree in self.trees:
-            forest_partitions = forest_partitions + tree.parts
+            forest_partitions = forest_partitions + list(zip(tree.parts, [tree] * len(tree.parts)))
         return forest_partitions
 
 def compute_dhp(task: Task) -> set:
@@ -258,11 +274,11 @@ def recursive_gang_schedule(taskset: list[Task], m: int) -> tuple[bool, np.array
 
         # Attempt to fit a task in an 
         # existing leaf partition
-        for leaf in forest.leaves():
+        for leaf, tree in forest.leaves():
             test_list = list(leaf.tasks)
             heapq.heappush(test_list, task)
             if leaf.m >= mi and is_schedulable(test_list):
-                leaf.tree.add_task(task, [leaf], [mi])
+                tree.add_task(task, [leaf], [mi])
                 schedulable = True
 
                 break
