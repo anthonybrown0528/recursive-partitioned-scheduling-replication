@@ -55,3 +55,11 @@ def test_9271_rounded():
         obj = pickle.load(file)
         obj = pickle.loads(obj)
     recursive_gang_schedule(obj, 8)
+
+
+def test_8063():
+    obj = None
+    with open('dump4.pkl', 'rb') as file:
+        obj = pickle.load(file)
+        obj = pickle.loads(obj)
+    recursive_gang_schedule(obj, 8)

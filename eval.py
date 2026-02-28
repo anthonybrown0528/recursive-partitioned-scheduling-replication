@@ -8,7 +8,6 @@ def handler(signum, frame):
     raise RuntimeError("Too long")
 
 signal.signal(signal.SIGALRM, handler)
-signal.alarm(30)
 
 from task import Task
 
@@ -77,6 +76,7 @@ for m in num_processors:
                     # if another_ctr % 100 == 0 and i >= 7999 and ctr == 1:
                     #     print('apply algo: ', i)
 
+                    signal.alarm(30)
                     try:
                         recursive_gang_schedule(taskset, m)
                         taskset.clear()
@@ -85,7 +85,7 @@ for m in num_processors:
                         print(i)
                         print('saving taskset to file...')
                         obj = pickle.dumps(taskset2)
-                        with open('dump3.pkl', 'wb') as file:
+                        with open('dump4.pkl', 'wb') as file:
                             pickle.dump(obj, file)
                         print('saved to file')
                         raise RuntimeError("Something went wrong while scheduling gang tasks", exc)
