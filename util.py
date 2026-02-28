@@ -21,8 +21,6 @@ def compute_ihp(dhp: set) -> set:
         found.add(t)
     while not q.empty():
         e = q.get()
-        found.remove(e)
-
         dhp_e = compute_dhp(e)
 
         for te in dhp_e:

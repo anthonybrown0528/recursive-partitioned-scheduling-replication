@@ -46,6 +46,10 @@ class PartitionTree:
 
         # Check if all tasks are shared on the partition
         if len(shared) == len(tasklist):
+            self.parts.append(part)
+            for task in shared:
+                proc_alloc = task_partition_map[task]
+                self.add_task(task, [part], [proc_alloc], proc_alloc)
             return False
 
         pl = Partition(mk)

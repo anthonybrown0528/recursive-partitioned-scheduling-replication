@@ -31,3 +31,11 @@ def test_8407():
         obj = pickle.load(file)
         obj = pickle.loads(obj)
     recursive_gang_schedule(obj, 8)
+
+
+def test_12127():
+    obj = None
+    with open('dump1.pkl', 'rb') as file:
+        obj = pickle.load(file)
+        obj = pickle.loads(obj)
+    recursive_gang_schedule(obj, 8)

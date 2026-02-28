@@ -2,6 +2,13 @@ import os
 import numpy as np
 import pandas as pd
 import pickle
+import signal
+
+def handler(signum, frame):
+    raise RuntimeError("Too long")
+
+signal.signal(signal.SIGALRM, handler)
+signal.alarm(30)
 
 from task import Task
 
@@ -56,6 +63,8 @@ for m in num_processors:
 
             taskset = []
             taskset2 = []
+            
+            another_ctr = 0
             for i, row in df.iterrows():
                 t = Task(row[data[2]], row[data[3]], row[data[4]], row[data[1]], row[data[4]])
                 t2 = Task(row[data[2]], row[data[3]], row[data[4]], row[data[1]], row[data[4]])
@@ -64,16 +73,20 @@ for m in num_processors:
                 taskset2.append(t2)
 
                 if len(taskset) == n:
+                    # another_ctr = another_ctr + 1
+                    # if another_ctr % 100 == 0 and i >= 7999 and ctr == 1:
+                    #     print('apply algo: ', i)
+
                     try:
                         recursive_gang_schedule(taskset, m)
                         taskset.clear()
                         taskset2.clear()
-                    except Exception:
+                    except Exception as exc:
                         print(i)
                         print('saving taskset to file...')
                         obj = pickle.dumps(taskset2)
-                        with open('dump1.pkl', 'wb') as file:
+                        with open('dump2.pkl', 'wb') as file:
                             pickle.dump(obj, file)
                         print('saved to file')
-                        raise RuntimeError("Something went wrong while scheduling gang tasks")
+                        raise RuntimeError("Something went wrong while scheduling gang tasks", exc)
 
