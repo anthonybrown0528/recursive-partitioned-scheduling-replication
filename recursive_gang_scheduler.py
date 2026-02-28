@@ -5,18 +5,20 @@ import math
 import heapq
 
 class Task:
-    def __init__(self, m: int):
+    def __init__(self, m: int, c: float, d: int, period: int):
         self.partitions = []
 
         # Task parallelism
         self.m = m
 
+        self.c = c
+        self.d = d
+        self.period = period
+
 class Partition:
-    def __init__(self, m: int, root: PartitionTree):
+    def __init__(self, m: int):
         self.m = m
         self.tasks = []
-
-        self.root = root
 
     def add_task(self, task: Task):
         heapq.heappush(self.tasks, task)
@@ -43,7 +45,7 @@ class PartitionTree:
 
         # Partition tree starts with
         # one partition with all available processors
-        self.parts = [Partition(m, self)]
+        self.parts = [Partition(m)] 
 
         # Maintains how many processors in each disjoint partition
         # are assigned to any task
@@ -79,8 +81,8 @@ class PartitionTree:
         if len(shared) == len(tasklist):
             return False
 
-        pl = Partition(mk, self)
-        pr = Partition(part.m - mk, self)
+        pl = Partition(mk)
+        pr = Partition(part.m - mk)
 
         for task in shared:
             proc_alloc = self.task_partition_map[(task, part)]
@@ -89,7 +91,9 @@ class PartitionTree:
             proc_alloc = self.task_partition_map[(task, part)]
             schedulable = False
             for leaf in [pl, pr]:
-                if leaf.m >= proc_alloc and is_schedulable(task, leaf):
+                test_list = leaf.tasks
+                heapq.heappush(test_list, task)
+                if leaf.m >= proc_alloc and is_schedulable(test_list):
                     schedulable = True
                     self.add_task(task, [leaf], [proc_alloc])
                     break
@@ -102,15 +106,15 @@ class PartitionTree:
             raise ValueError("Mismatch in task parallelism and processors to allocated")
 
         # Associate a task to multiple partitions
-        task.set_partitions(partitions)
+        task.partitions = partitions
         [partition.add_task(task) for partition in partitions]
 
         # Specify how many processors in each partition
         # is allocated for a task
-        for i, partition in enumerate(partition):
+        for i, partition in enumerate(partitions):
             self.task_partition_map[(task, partition)] = m_per_part[i]
 
-def compute_response_time_bound(task: Task, dhp: set, dhp_noci: set):
+def compute_response_time_bound(task: Task, dhp: set, dhp_noci: set, response_map: dict):
     rr = task.c
     interference = 0
 
@@ -119,7 +123,7 @@ def compute_response_time_bound(task: Task, dhp: set, dhp_noci: set):
         if t in dhp_noci:
             term = math.ceil(rr / t.period) * t.c
         else:
-            term = math.ceil((rr + t.r - t.c) / t.period) * t.c
+            term = math.ceil((rr + response_map[t] - t.c) / t.period) * t.c
         interference = interference + term
     rl = task.c + interference
 
@@ -135,6 +139,7 @@ def compute_response_time_bound(task: Task, dhp: set, dhp_noci: set):
                 term = None
             interference = interference + term
         rl = task.c + interference
+    response_map[task] = rl 
 
 class PartitionForest:
     def __init__(self, m: int):
@@ -142,11 +147,11 @@ class PartitionForest:
         self.m  = m
 
     def create_tree(self, mi: int) -> PartitionTree:
-        if mi >= self.m:
+        if mi > self.m:
             raise ValueError("Unable to allocate sufficient processors")
         
         self.m = self.m - mi
-        added_tree = Partition(mi)
+        added_tree = PartitionTree(mi)
         self.trees.append(added_tree)
 
         return added_tree
@@ -187,7 +192,7 @@ def compute_ihp(task: Task, dhp: set) -> set:
             ihp.add(e)
     return ihp
 
-def compute_dhp_nocii(task, dhp: set) -> set:
+def compute_dhp_noci(dhp: set) -> set:
     dhp_noci = set()
 
     for t in dhp:
@@ -198,10 +203,17 @@ def compute_dhp_nocii(task, dhp: set) -> set:
             dhp_noci.union(dhp_t)
     return dhp_noci
 
-def is_schedulable(task, partition) -> bool:
-    dhp = compute_dhp(task)
-    ihp = compute_ihp(task, dhp)
-    dhp_noci = compute_dhp_noci(task)
+def is_schedulable(taskset: list[Task]) -> bool:
+
+    response_map = {}
+    for t in taskset:
+        dhp = compute_dhp(t)
+        dhp_noci = compute_dhp_noci(dhp)
+
+        compute_response_time_bound(t, dhp, dhp_noci, response_map)
+        if response_map[t] > t.d:
+            return False
+    return True
 
 
 def generate_sub_partition(assigned_tasks: list, leaf, forest: PartitionForest) -> tuple:
@@ -224,7 +236,9 @@ def generate_sub_partition(assigned_tasks: list, leaf, forest: PartitionForest) 
     for task in non_shared_tasks:
         schedulable = False
         for leaf in [left_leaf, right_leaf]:
-            if leaf.processors() >= leaf.processors_allocated(task) and is_schedulable(task, leaf):
+            test_list = list(leaf.tasks)
+            heapq.heappush(test_list, task)
+            if leaf.processors() >= leaf.processors_allocated(task) and is_schedulable(test_list):
                 schedulable = True
                 leaf.tasks().append(task)
                 break
@@ -232,8 +246,8 @@ def generate_sub_partition(assigned_tasks: list, leaf, forest: PartitionForest) 
             return left_leaf, right_leaf, forest, schedulable
     return left_leaf, right_leaf, forest, True
 
-def recursive_gang_schedule(taskset: list, m: int) -> tuple[bool, np.array]:
-    forest = PartitionForest()
+def recursive_gang_schedule(taskset: list[Task], m: int) -> tuple[bool, np.array]:
+    forest = PartitionForest(m)
     budget = m
 
     # Attempt to schedule
@@ -245,14 +259,16 @@ def recursive_gang_schedule(taskset: list, m: int) -> tuple[bool, np.array]:
         # Attempt to fit a task in an 
         # existing leaf partition
         for leaf in forest.leaves():
-            if leaf.m >= mi and is_schedulable(task, leaf):
+            test_list = list(leaf.tasks)
+            heapq.heappush(test_list, task)
+            if leaf.m >= mi and is_schedulable(test_list):
                 leaf.tree.add_task(task, [leaf], [mi])
                 schedulable = True
 
                 break
         if not schedulable and budget >= mi:
             added_tree = forest.create_tree(mi)
-            added_tree.add_task(task, added_tree.parts, mi)
+            added_tree.add_task(task, added_tree.parts, [mi])
 
             schedulable = True
         elif not schedulable:
@@ -277,5 +293,5 @@ def recursive_gang_schedule(taskset: list, m: int) -> tuple[bool, np.array]:
             # Terminate the algorithm prematurely
             # if any task cannot be scheduled
             if not schedulable:
-                return schedulable
-    return schedulable
+                return schedulable, forest
+    return schedulable, forest
