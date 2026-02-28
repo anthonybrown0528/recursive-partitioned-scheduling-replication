@@ -18,7 +18,7 @@ def compute_ihp(dhp: set) -> set:
     ihp = set()
     for t in dhp:
         q.put(t)
-        found.add(q)
+        found.add(t)
     while not q.empty():
         e = q.get()
         found.remove(e)
@@ -64,9 +64,9 @@ def compute_response_time_bound(task: Task, dhp: set, dhp_noci: set, response_ma
         for t in dhp:
             term = 0
             if t in dhp_noci:
-                term = None
+                term = math.ceil(rr / t.period) * t.c
             else:
-                term = None
+                term = math.ceil((rr + response_map[t] - t.c) / t.period) * t.c
             interference = interference + term
         rl = task.c + interference
     response_map[task] = rl 

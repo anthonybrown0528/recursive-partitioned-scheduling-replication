@@ -6,8 +6,17 @@ class Partition:
         self.m = m
         self.tasks = []
 
-    def add_task(self, task: Task):
+        # Maintains how many processors in each disjoint partition
+        # are assigned to any task
+        self.task_partition_map = {}
+
+    def add_task(self, task: Task, m: int):
         heapq.heappush(self.tasks, task)
+        self.task_partition_map[task] = m
+
+    def remove_task(self, task: Task):
+        self.tasks.remove(task)
+        del self.task_partition_map[task]
 
     def greater_priority(self, task):
         left = 0

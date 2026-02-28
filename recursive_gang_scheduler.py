@@ -13,18 +13,17 @@ def recursive_gang_schedule(taskset: list[Task], m: int) -> tuple[bool, np.array
 
     # Attempt to schedule
     # each task sequentially
-    sorted_taskset = sorted(taskset, key=lambda x: (x.m, x.priority))
+    sorted_taskset = sorted(taskset, key=lambda x: (-x.m, x.priority))
 
-    for task in taskset:
+    for task in sorted_taskset:
         schedulable = False
         mi = task.m
 
         # Attempt to fit a task in an 
         # existing leaf partition
         for leaf, tree, part_idx in forest.leaves():
-            test_list = list(leaf.tasks)
-            heapq.heappush(test_list, task)
-            if leaf.m >= mi and is_schedulable(test_list):
+            tree.add_task(task, [leaf], [mi])
+            if leaf.m >= mi and is_schedulable(leaf.tasks):
                 tree.add_task(task, [leaf], [mi])
                 schedulable = True
 
