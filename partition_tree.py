@@ -39,7 +39,7 @@ class PartitionTree:
                 shared.append(task)
             else:
                 nonshared.append(task)
-                mk = mi
+                mk = max(mk, mi)
 
         # Check if all tasks are shared on the partition
         if len(shared) == len(tasklist):

@@ -42,6 +42,7 @@ def compute_dhp_noci(dhp: set) -> set:
 
         if dhp_t.issubset(dhp) and len(ihp_t) == 0:
             dhp_noci.union(dhp_t)
+            dhp_noci.add(t)
     return dhp_noci
 
 def compute_response_time_bound(task: Task, dhp: set, dhp_noci: set, response_map: dict):
