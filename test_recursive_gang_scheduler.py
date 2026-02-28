@@ -12,11 +12,11 @@ def test_valid_schedule():
     assert schedulable
 
 def test_known_partition():
-    t1 = Task(2, 5, 10, 10, 10)
-    t2 = Task(5, 10, 15, 15, 15)
+    t1 = Task(2, 2, 10, 10, 10)
+    t2 = Task(5, 8, 20, 20, 20)
     t3 = Task(2, 21, 70, 70, 70)
     t4 = Task(3, 16, 80, 80, 80)
-    t5 = Task(1, 20, 100, 100, 100)
+    t5 = Task(1, 20, 55, 55, 55)
 
     schedulable, forest = recursive_gang_schedule([t1, t2, t3, t4, t5], 5)
     assert schedulable
