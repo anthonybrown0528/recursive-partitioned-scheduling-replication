@@ -20,7 +20,7 @@ class PartitionTree:
     def create_subpartitions(self, part: int):
         tasklist = part.tasks 
         self.parts.remove(part)
-        task_queue = sorted(tasklist)
+        task_queue = sorted(tasklist, key=lambda x: (-x.m, x.priority))
         
         # Find task with the least amount of threads
         # mapped to the original partition
