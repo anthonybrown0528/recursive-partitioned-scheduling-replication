@@ -72,7 +72,7 @@ class PartitionTree:
                 global_schedulable = False
                 break
         
-        if global_schedulable:
+        if not global_schedulable:
             for task in shared:
                 proc_alloc = task_partition_map[task]
 
@@ -84,7 +84,10 @@ class PartitionTree:
                 self.remove_task(task, [pr])
             for task in nonshared:
                 proc_alloc = task_partition_map[task]
-                self.add_task(task, [part], [proc_alloc], proc_alloc) 
+                self.add_task(task, [part], [proc_alloc], proc_alloc)
+            self.parts.remove(pl)
+            self.parts.remove(pr)
+            self.parts.append(part) 
 
 
         return global_schedulable
