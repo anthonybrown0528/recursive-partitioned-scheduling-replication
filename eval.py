@@ -85,7 +85,7 @@ for m in num_processors:
                         print(i)
                         print('saving taskset to file...')
                         obj = pickle.dumps(taskset2)
-                        with open('dump4.pkl', 'wb') as file:
+                        with open('dump5.pkl', 'wb') as file:
                             pickle.dump(obj, file)
                         print('saved to file')
                         raise RuntimeError("Something went wrong while scheduling gang tasks", exc)

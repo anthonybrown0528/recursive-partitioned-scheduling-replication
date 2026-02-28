@@ -52,6 +52,11 @@ def compute_response_time_bound(task: Task, dhp: set, dhp_noci: set, response_ma
         if t in dhp_noci:
             term = math.ceil(rr / t.period) * t.c
         else:
+            if t not in response_map:
+                dhp_t = compute_dhp(t)
+                dhp_noci_t = compute_dhp_noci(dhp_t)
+                compute_response_time_bound(t, dhp_t, dhp_noci_t, response_map)
+
             term = math.ceil((rr + response_map[t] - t.c) / t.period) * t.c
         interference = interference + term
     rl = task.c + interference
@@ -65,6 +70,11 @@ def compute_response_time_bound(task: Task, dhp: set, dhp_noci: set, response_ma
             if t in dhp_noci:
                 term = math.ceil(rr / t.period) * t.c
             else:
+                if t not in response_map:
+                    dhp_t = compute_dhp(t)
+                    dhp_noci_t = compute_dhp_noci(dhp_t)
+                    compute_response_time_bound(t, dhp_t, dhp_noci_t, response_map)
+
                 term = math.ceil((rr + response_map[t] - t.c) / t.period) * t.c
             interference = interference + term
         rl = task.c + interference
