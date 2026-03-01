@@ -1,9 +1,15 @@
 from functools import total_ordering
 
+id = 0
+
 @total_ordering
 class Task:
     def __init__(self, m: int, c: float, d: int, period: int, priority: int):
+        global id
         self.partitions = []
+
+        self.id = id
+        id = id + 1
 
         # Task parallelism
         self.m = m
@@ -15,12 +21,13 @@ class Task:
         self.priority = priority
 
     def __lt__(self, other):
-        self.priority < other.priority
+        if self.priority == other.priority:
+            return self.id < other.id
+        return self.priority < other.priority 
 
     def __eq__(self, other):
-        if not isinstance(other, Task):
-            return False
-        return (self.m, self.c, self.d, self.period, self.priority) == (other.m, other.c, other.d, other.period, other.priority)
+        return self.priority == other.priority and self.id == other.id
 
     def __hash__(self):
-        return hash((self.m, self.c, self.d, self.period, self.priority))
+        return hash((self.id, self.priority))
+        # return hash((self.id, self.m, self.c, self.d, self.period, self.priority))

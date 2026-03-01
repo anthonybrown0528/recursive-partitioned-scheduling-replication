@@ -11,7 +11,19 @@ class Partition:
         self.task_partition_map = {}
 
     def add_task(self, task: Task, m: int):
-        heapq.heappush(self.tasks, task)
+        left = 0
+        right = len(self.tasks) - 1
+
+        while left <= right:
+            mid = left + (right - left) // 2
+            if task > self.tasks[mid]:
+                left = mid + 1
+            elif task < self.tasks[mid]:
+                right = mid - 1
+            else:
+                self.task_partition_map[task] = m
+                return
+        self.tasks.insert(left, task) 
         self.task_partition_map[task] = m
 
     def remove_task(self, task: Task):
@@ -27,8 +39,8 @@ class Partition:
             compared = self.tasks[mid]
             if task == compared:
                 return self.tasks[:mid]
-            elif task > compared:
-                left = mid + 1
-            else:
+            elif task < compared:
                 right = mid - 1
+            else:
+                left = mid + 1
         return []
