@@ -85,7 +85,7 @@ for m in num_processors:
                         print(i)
                         print('saving taskset to file...')
                         obj = pickle.dumps(taskset2)
-                        with open('dump6.pkl', 'wb') as file:
+                        with open('dump7.pkl', 'wb') as file:
                             pickle.dump(obj, file)
                         print('saved to file')
                         raise exc

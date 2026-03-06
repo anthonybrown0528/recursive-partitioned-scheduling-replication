@@ -38,7 +38,7 @@ def transform_interference_set(k: int):
         option = 0
         for j in suspension_inducer_sets[(i, k)]:
             term = 1
-            term = term + math.ceil(response_bounds[i] / tasklist[j].r)
+            term = term + math.ceil(response_bounds[i] / tasklist[j].period)
 
             term = term * task.c
             option = option + term
