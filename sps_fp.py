@@ -1,5 +1,3 @@
-import heapq
-
 import numpy as np
 
 from task import Task
@@ -13,7 +11,7 @@ def recursive_gang_schedule(taskset: list[Task], m: int) -> tuple[bool, np.array
 
     # Attempt to schedule
     # each task sequentially
-    sorted_taskset = sorted(taskset, key=lambda x: (-x.m, x.priority))
+    sorted_taskset = sorted(taskset, key=lambda x: (-x.m, x.period))
 
     for task in sorted_taskset:
         schedulable = False
@@ -34,22 +32,6 @@ def recursive_gang_schedule(taskset: list[Task], m: int) -> tuple[bool, np.array
 
             budget = budget - mi
             schedulable = True
-        elif not schedulable:
-            for leaf, tree, part_idx in forest.leaves():
-                if leaf.m >= mi:
-                    tree.add_task(task, [leaf], [task.m], task.m)
-                    success = tree.create_subpartitions(leaf)
-                    
-                    # Found a leaf partition which can be subpartitioned
-                    # to fit the current task
-                    if success:
-
-                        # Add task to the left and right leaf partitions
-                        schedulable = True
-
-                        # Stop searching for leaves to subpartition
-                        break
-                    tree.remove_task(task, [leaf])
 
             # Terminate the algorithm prematurely
             # if any task cannot be scheduled
