@@ -6,7 +6,6 @@ id = 0
 class Task:
     def __init__(self, m: int, c: float, d: int, period: int, priority: int):
         global id
-        self.partitions = []
 
         self.id = id
         id = id + 1

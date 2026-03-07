@@ -16,8 +16,7 @@ class PartitionForest:
 
         return added_tree
 
-    def leaves(self) -> list[Partition]:
-        forest_partitions = []
+    def leaves(self):
         for tree in self.trees:
-            forest_partitions = forest_partitions + list(zip(tree.parts, [tree] * len(tree.parts), list(range(len(tree.parts)))))
-        return forest_partitions
+            for partition in tree.parts:
+                yield partition, tree

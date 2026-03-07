@@ -1,4 +1,3 @@
-import heapq
 from task import Task
 
 class Partition:
@@ -28,7 +27,7 @@ class Partition:
 
     def remove_task(self, task: Task):
         self.tasks.remove(task)
-        del self.task_partition_map[task]
+        # del self.task_partition_map[task]
 
     def greater_priority(self, task):
         left = 0
@@ -39,6 +38,21 @@ class Partition:
             compared = self.tasks[mid]
             if task == compared:
                 return self.tasks[:mid]
+            elif task < compared:
+                right = mid - 1
+            else:
+                left = mid + 1
+        return []
+
+    def atmost_priority(self, task):
+        left = 0
+        right = len(self.tasks) - 1
+
+        while left <= right:
+            mid = left + (right - left) // 2
+            compared = self.tasks[mid]
+            if task == compared:
+                return self.tasks[mid:]
             elif task < compared:
                 right = mid - 1
             else:

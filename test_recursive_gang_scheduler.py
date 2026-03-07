@@ -71,3 +71,10 @@ def test_28991():
         obj = pickle.load(file)
         obj = pickle.loads(obj)
     recursive_gang_schedule(obj, 8)
+
+def test_00015():
+    obj = None
+    with open('dump7.pkl', 'rb') as file:
+        obj = pickle.load(file)
+        obj = pickle.loads(obj)
+    recursive_gang_schedule(obj, 8)

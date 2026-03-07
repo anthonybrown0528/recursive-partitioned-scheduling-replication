@@ -1,49 +1,40 @@
-import queue
 import math
 
 from task import Task
+from partition import Partition
 
-def compute_dhp(task: Task) -> set:
-    partitions = task.partitions
-    dhp_task_set = set()
+def compute_dhp(task: Task, partitions: set[Task], dhp: dict[Task, set]) -> set:
+    dhp_taskset = set()
     for part in partitions:
         tasklist = part.greater_priority(task)
-        dhp_task_set = dhp_task_set.union(tasklist)
-    return dhp_task_set
+        dhp_taskset = dhp_taskset.union(tasklist)
+    dhp[task] = dhp_taskset
+    return dhp_taskset
 
-def compute_ihp(dhp: set) -> set:
-    q = queue.Queue()
-    found = set()
+def compute_ihp(task: Task, dhp_taskset: set, ihp: dict[Task, set], dhp: dict[Task, set]) -> set:
+    ihp_taskset = set()
+    for t in dhp_taskset:
+        ihp_taskset = ihp_taskset.union(ihp[t])
+        ihp_taskset = ihp_taskset.union(dhp[t])
+    for t in dhp_taskset:
+        ihp_taskset = ihp_taskset.difference(dhp_taskset)
 
-    ihp = set()
-    for t in dhp:
-        q.put(t)
-        found.add(t)
-    while not q.empty():
-        e = q.get()
-        dhp_e = compute_dhp(e)
+    ihp[task] = ihp_taskset
+    return ihp_taskset
 
-        for te in dhp_e:
-            if te not in found:
-                q.put(te)
-                found.add(te)
-        if e not in dhp:
-            ihp.add(e)
-    return ihp
-
-def compute_dhp_noci(dhp: set) -> set:
+def compute_dhp_noci(dhp_taskset: set[Task], dhp: dict[Task, set], ihp: dict[Task, set]) -> set:
     dhp_noci = set()
 
-    for t in dhp:
-        dhp_t = compute_dhp(t)
-        ihp_t = compute_ihp(dhp_t)
+    for t in dhp_taskset:
+        dhp_t = dhp[t]
+        ihp_t = ihp[t]
 
-        if dhp_t.issubset(dhp) and len(ihp_t) == 0:
+        if dhp_t.issubset(dhp_taskset) and len(ihp_t) == 0:
             dhp_noci.union(dhp_t)
             dhp_noci.add(t)
     return dhp_noci
 
-def compute_response_time_bound(task: Task, dhp: set, dhp_noci: set, response_map: dict):
+def compute_response_time_bound(task: Task, dhp: set[Task], dhp_noci: set[Task], response_bounds: dict[Task, float]):
     rr = task.c
     interference = 0
 
@@ -52,12 +43,7 @@ def compute_response_time_bound(task: Task, dhp: set, dhp_noci: set, response_ma
         if t in dhp_noci:
             term = math.ceil(rr / t.period) * t.c
         else:
-            if t not in response_map:
-                dhp_t = compute_dhp(t)
-                dhp_noci_t = compute_dhp_noci(dhp_t)
-                compute_response_time_bound(t, dhp_t, dhp_noci_t, response_map)
-
-            term = math.ceil((rr + response_map[t] - t.c) / t.period) * t.c
+            term = math.ceil((rr + response_bounds[t] - t.c) / t.period) * t.c
         interference = interference + term
     rl = task.c + interference
 
@@ -70,24 +56,21 @@ def compute_response_time_bound(task: Task, dhp: set, dhp_noci: set, response_ma
             if t in dhp_noci:
                 term = math.ceil(rr / t.period) * t.c
             else:
-                if t not in response_map:
-                    dhp_t = compute_dhp(t)
-                    dhp_noci_t = compute_dhp_noci(dhp_t)
-                    compute_response_time_bound(t, dhp_t, dhp_noci_t, response_map)
-
-                term = math.ceil((rr + response_map[t] - t.c) / t.period) * t.c
+                term = math.ceil((rr + response_bounds[t] - t.c) / t.period) * t.c
             interference = interference + term
         rl = task.c + interference
-    response_map[task] = rl 
+    response_bounds[task] = rl 
 
-def is_schedulable(taskset: list[Task]) -> bool:
+def is_schedulable(task: Task, partitions: set[Task], part: Partition, dhp: dict[Task, set[Task]], ihp: dict[Task, set[Task]], response_bounds: dict[Task, float]) -> bool:
 
-    response_map = {}
+    taskset = part.atmost_priority(task)
     for t in taskset:
-        dhp = compute_dhp(t)
-        dhp_noci = compute_dhp_noci(dhp)
+        compute_dhp(t, partitions, dhp)
+        compute_ihp(t, dhp[t], ihp, dhp)
 
-        compute_response_time_bound(t, dhp, dhp_noci, response_map)
-        if response_map[t] > t.d:
+        dhp_noci = compute_dhp_noci(dhp[t], dhp, ihp)
+
+        compute_response_time_bound(t, dhp[t], dhp_noci, response_bounds)
+        if response_bounds[t] > t.d:
             return False
     return True
