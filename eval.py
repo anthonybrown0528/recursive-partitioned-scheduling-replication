@@ -88,8 +88,13 @@ def process_data(args):
     taskset, m = args
     success, _ = recursive_gang_schedule(taskset, m)
 
+    return success, len(taskset), m
+
 print("Starting schedulability tests")
+outputs = []
 for i, res in enumerate(results):
     print('processing', i, 'out of', len(results))
     with multiprocessing.Pool(NUM_THREADS) as pool:
-        pool.map(process_data, res)
+        outputs = outputs + pool.map(process_data, res)
+output_df = pd.DataFrame(outputs, columns=['success', 'taskset size', 'processor count'])
+print(output_df[output_df['success'] == True].head())
