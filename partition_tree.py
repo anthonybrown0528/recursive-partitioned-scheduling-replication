@@ -58,6 +58,7 @@ class PartitionTree:
         for task in shared:
             proc_alloc = task_partition_map[task]
             self.add_task(task, [pl, pr], [mk, proc_alloc - mk])
+            is_schedulable(task, self.partition_assignment[task], pl, self.dhp, self.ihp, self.response_bounds)
         global_schedulable = True
         for task in nonshared:
             proc_alloc = task_partition_map[task]
@@ -120,5 +121,8 @@ class PartitionTree:
             self.dhp = dhp_copy
             self.ihp = ihp_copy
             self.response_bounds = rb_copy
+
+            return True
         else:
             self.remove_task(task, [part])
+        return False

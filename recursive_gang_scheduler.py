@@ -3,6 +3,8 @@ import numpy as np
 from task import Task
 from partition_forest import PartitionForest
 
+from util import compute_dhp, compute_ihp, compute_response_time_bound, compute_dhp_noci
+
 def recursive_gang_schedule(taskset: list[Task], m: int) -> tuple[bool, np.array]:
     forest = PartitionForest(m)
     budget = m
@@ -31,6 +33,12 @@ def recursive_gang_schedule(taskset: list[Task], m: int) -> tuple[bool, np.array
             for leaf, tree in forest.leaves():
                 if leaf.m >= mi:
                     tree.add_task(task, [leaf], [task.m])
+
+                    # dhp = compute_dhp(task, [leaf], tree.dhp)
+                    # compute_ihp(task, dhp, tree.ihp, tree.dhp)
+                    # dhp_noci = compute_dhp_noci(dhp, tree.dhp, tree.ihp)
+                    # compute_response_time_bound(task, dhp, dhp_noci, tree.response_bounds)
+
                     success = tree.create_subpartitions(leaf)
                     
                     # Found a leaf partition which can be subpartitioned
@@ -42,6 +50,10 @@ def recursive_gang_schedule(taskset: list[Task], m: int) -> tuple[bool, np.array
 
                         # Stop searching for leaves to subpartition
                         break
+                    
+                    # del tree.dhp[task]
+                    # del tree.ihp[task]
+                    # del tree.response_bounds[task]
                     tree.remove_task(task, [leaf])
 
             # Terminate the algorithm prematurely

@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import multiprocessing
+import pickle
 
 from task import Task
 
@@ -48,6 +49,8 @@ for m in num_processors:
         for ctr, u_taskset in enumerate(u_gang):
             taskset_util_prefix = f'{ctr}_'
             filepaths.append((m, n, os.path.join(OUT_DATA_DIR, f'{m_prefix}{n_prefix}{taskset_util_prefix}{IN_DATA_FILE_EXT}')))
+        break
+    break
 
 
 def load_data(args):
@@ -86,7 +89,13 @@ with multiprocessing.Pool(NUM_THREADS) as pool:
     
 def process_data(args):
     taskset, m = args
-    success, _ = recursive_gang_schedule(taskset, m)
+    try:
+        success, _ = recursive_gang_schedule(taskset, m)
+    except Exception as exc:
+        with open('dumpsomething.pkl', 'wb') as f:
+            pickle.dump(args, f)
+        success, _ = recursive_gang_schedule(taskset, m)
+        raise exc
 
     return success, len(taskset), m
 
@@ -97,4 +106,4 @@ for i, res in enumerate(results):
     with multiprocessing.Pool(NUM_THREADS) as pool:
         outputs = outputs + pool.map(process_data, res)
 output_df = pd.DataFrame(outputs, columns=['success', 'taskset size', 'processor count'])
-print(output_df[output_df['success'] == True].head())
+# print(output_df[output_df['success'] == True].head())
