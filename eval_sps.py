@@ -6,7 +6,7 @@ import pickle
 
 from task import Task
 
-from recursive_gang_scheduler import recursive_gang_schedule
+from sps_fp import sps
 
 
 # Path where input dataset will be stored
@@ -87,11 +87,11 @@ with multiprocessing.Pool(NUM_THREADS) as pool:
 def process_data(args):
     taskset, m = args
     try:
-        success, _ = recursive_gang_schedule(taskset, m)
+        success, _ = sps(taskset, m)
     except Exception as exc:
         with open('dumptry.pkl', 'wb') as f:
             pickle.dump(args, f)
-        success, _ = recursive_gang_schedule(taskset, m)
+        success, _ = sps(taskset, m)
         raise exc
 
     return success, len(taskset), m
@@ -103,5 +103,5 @@ for i, res in enumerate(results):
     with multiprocessing.Pool(NUM_THREADS) as pool:
         outputs = outputs + pool.map(process_data, res)
 output_df = pd.DataFrame(outputs, columns=['success', 'taskset size', 'processor count'])
-output_df.to_csv('prelim_results.csv')
+output_df.to_csv('prelim_results_sps.csv')
 # print(output_df[output_df['success'] == True].head())
