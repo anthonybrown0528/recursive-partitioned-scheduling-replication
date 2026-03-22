@@ -29,7 +29,7 @@ def sps(taskset: list[Task], m: int) -> tuple[bool, np.array]:
 
             budget = budget - mi
             schedulable = True
-        else:
+        elif not schedulable:
             return False, None
 
     return schedulable, forest

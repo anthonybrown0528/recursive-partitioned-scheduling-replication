@@ -1,17 +1,13 @@
 import os
 import numpy as np
 import pandas as pd
+import multiprocessing
 import pickle
-import signal
-
-def handler(signum, frame):
-    raise RuntimeError("Too long")
-
-signal.signal(signal.SIGALRM, handler)
 
 from task import Task
 
 from stationary_scheduler import stationary_schedule
+
 
 # Path where input dataset will be stored
 DATA_DIR = 'data'
@@ -31,6 +27,11 @@ num_tasks_scaled = np.array([1, 1.5, 2, 2.5])
 # Total utilization of the task set as a fraction of number of processors
 u_gang_scale = np.linspace(start=0.1, stop=1.0, num=10, endpoint=True)
 
+schedulability_results = []
+filepaths = []
+
+NUM_THREADS = 8
+
 # Iterate over number of processors
 for m in num_processors:
     num_tasks = (num_tasks_scaled * m).astype(np.int8)
@@ -47,47 +48,60 @@ for m in num_processors:
         # Iterate over target task set utilization
         for ctr, u_taskset in enumerate(u_gang):
             taskset_util_prefix = f'{ctr}_'
+            filepaths.append((m, n, os.path.join(OUT_DATA_DIR, f'{m_prefix}{n_prefix}{taskset_util_prefix}{IN_DATA_FILE_EXT}')))
 
-            df = pd.read_parquet(os.path.join(OUT_DATA_DIR, f'{m_prefix}{n_prefix}{taskset_util_prefix}{IN_DATA_FILE_EXT}'))
-            print("Loaded batch of data:", m, n, u_taskset)
+def load_data(args):
+    m, n, filepath = args
 
-            # Save data to dataset directory
-            data = [
-                'u-values',
-                'periods',
-                'parallelism',
-                'wct',
-                'deadlines'    
-            ]
+    df = pd.read_parquet(filepath)
+    print("Loaded batch of data:", filepath)
 
+    # Save data to dataset directory
+    data = [
+        'u-values',
+        'periods',
+        'parallelism',
+        'wct',
+        'deadlines'    
+    ]
+
+    taskset = []
+    taskset_collection = []
+    
+    for _, row in df.iterrows():
+        t = Task(round(row[data[2]]), row[data[3]], round(row[data[4]]), round(row[data[1]]), round(row[data[4]]))
+        
+        taskset.append(t)
+
+        if len(taskset) == n:
+            taskset_collection.append((taskset, m))
             taskset = []
-            taskset2 = []
-            
-            another_ctr = 0
-            for i, row in df.iterrows():
-                t = Task(round(row[data[2]]), row[data[3]], round(row[data[4]]), round(row[data[1]]), round(row[data[4]]))
-                t2 = Task(round(row[data[2]]), row[data[3]], round(row[data[4]]), round(row[data[1]]), round(row[data[4]]))
-                
-                taskset.append(t)
-                taskset2.append(t2)
+    print("Processed data from file:", filepath)
+    return taskset_collection
 
-                if len(taskset) == n:
-                    # another_ctr = another_ctr + 1
-                    # if another_ctr % 100 == 0 and i >= 7999 and ctr == 1:
-                    #     print('apply algo: ', i)
+results = []
+with multiprocessing.Pool(NUM_THREADS) as pool:
+    value = pool.map(load_data, filepaths)
+    results = value
+    
+def process_data(args):
+    taskset, m = args
+    try:
+        success = stationary_schedule(taskset, m)
+    except Exception as exc:
+        with open('dumptry.pkl', 'wb') as f:
+            pickle.dump(args, f)
+        success = stationary_schedule(taskset, m)
+        raise exc
 
-                    signal.alarm(30)
-                    try:
-                        stationary_schedule(taskset, m)
-                        taskset.clear()
-                        taskset2.clear()
-                    except Exception as exc:
-                        print(i)
-                        print('saving taskset to file...')
-                        obj = pickle.dumps(taskset2)
-                        with open('dump7.pkl', 'wb') as file:
-                            pickle.dump(obj, file)
-                        print('saved to file')
-                        raise exc
-                        # raise RuntimeError("Something went wrong while scheduling gang tasks", exc)
+    return success, len(taskset), m
 
+print("Starting schedulability tests")
+outputs = []
+for i, res in enumerate(results):
+    print('processing', i, 'out of', len(results))
+    with multiprocessing.Pool(1) as pool:
+        outputs = outputs + pool.map(process_data, res)
+output_df = pd.DataFrame(outputs, columns=['success', 'taskset size', 'processor count'])
+output_df.to_csv('prelim_results_stationary_schedule.csv')
+# print(output_df[output_df['success'] == True].head())
