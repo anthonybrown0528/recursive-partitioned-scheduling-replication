@@ -49,9 +49,6 @@ for m in num_processors:
         for ctr, u_taskset in enumerate(u_gang):
             taskset_util_prefix = f'{ctr}_'
             filepaths.append((m, n, os.path.join(OUT_DATA_DIR, f'{m_prefix}{n_prefix}{taskset_util_prefix}{IN_DATA_FILE_EXT}')))
-            break
-        break
-    break
 
 def load_data(args):
     m, n, filepath = args
@@ -103,7 +100,7 @@ print("Starting schedulability tests")
 outputs = []
 for i, res in enumerate(results):
     print('processing', i, 'out of', len(results))
-    with multiprocessing.Pool(1) as pool:
+    with multiprocessing.Pool(NUM_THREADS) as pool:
         outputs = outputs + pool.map(process_data, res)
 output_df = pd.DataFrame(outputs, columns=['success', 'taskset size', 'processor count'])
 output_df.to_csv('prelim_results_stationary_schedule.csv')
