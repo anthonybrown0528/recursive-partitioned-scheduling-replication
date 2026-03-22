@@ -83,11 +83,12 @@ def eq1(task: Task, transformed_interference_list: list[int]):
 
     while response_bound_new != response_bound_old and response_bound_new <= task.d:
         response_bound_old = response_bound_new
+        response_bound_new = task.c
         for idx, (i, _) in enumerate(transformed_interference_list):
             interfering_task = tasklist[i]
 
             term = response_bound_old + q_values[idx] + (1 - x[idx]) * (response_bounds[i] - interfering_task.c)
-            term = math.ceil(term / interfering_task.period)
+            term = math.ceil(term / interfering_task.period) * interfering_task.c
 
             response_bound_new = response_bound_new + term
     return response_bound_new
@@ -114,11 +115,12 @@ def eq2(task: Task, transformed_interference_list: list[int]):
 
     while response_bound_new != response_bound_old and response_bound_new <= task.d:
         response_bound_old = response_bound_new
+        response_bound_new = task.c
         for idx, (i, _) in enumerate(transformed_interference_list):
             interfering_task = tasklist[i]
 
             term = response_bound_old + q_values[idx] + (1 - x[idx]) * (response_bounds[i] - interfering_task.c)
-            term = math.ceil(term / interfering_task.period)
+            term = math.ceil(term / interfering_task.period) * interfering_task.c
 
             response_bound_new = response_bound_new + term
     return response_bound_new
@@ -136,7 +138,7 @@ def eq3(task: Task, transformed_interference_list: list[int]):
         tu = t.c / t.period
         util_sum = util_sum + tu
         if tu * (response_bounds[i] - t.c) > s * util_sum:
-            x[i] = 1
+            x[idx] = 1
 
     q_values = [0]
     for idx, (i, s) in reversed(list(enumerate(transformed_interference_list))):
@@ -148,11 +150,12 @@ def eq3(task: Task, transformed_interference_list: list[int]):
 
     while response_bound_new != response_bound_old and response_bound_new <= task.d:
         response_bound_old = response_bound_new
+        response_bound_new = task.c
         for idx, (i, _) in enumerate(transformed_interference_list):
             interfering_task = tasklist[i]
 
             term = response_bound_old + q_values[idx] + (1 - x[idx]) * (response_bounds[i] - interfering_task.c)
-            term = math.ceil(term / interfering_task.period)
+            term = math.ceil(term / interfering_task.period) * interfering_task.c
 
             response_bound_new = response_bound_new + term
     return response_bound_new

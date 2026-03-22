@@ -100,7 +100,7 @@ print("Starting schedulability tests")
 outputs = []
 for i, res in enumerate(results):
     print('processing', i, 'out of', len(results))
-    with multiprocessing.Pool(1) as pool:
+    with multiprocessing.Pool(NUM_THREADS) as pool:
         outputs = outputs + pool.map(process_data, res)
 output_df = pd.DataFrame(outputs, columns=['success', 'taskset size', 'processor count'])
 output_df.to_csv('prelim_results_sps.csv')
