@@ -2,7 +2,6 @@ import os
 import numpy as np
 import pandas as pd
 import multiprocessing
-import pickle
 
 from task import Task
 
@@ -86,22 +85,35 @@ with multiprocessing.Pool(NUM_THREADS) as pool:
     
 def process_data(args):
     taskset, m = args
-    try:
-        success, _ = recursive_gang_schedule(taskset, m)
-    except Exception as exc:
-        with open('dumptry.pkl', 'wb') as f:
-            pickle.dump(args, f)
-        success, _ = recursive_gang_schedule(taskset, m)
-        raise exc
+    success, forest = recursive_gang_schedule(taskset, m)
 
-    return success, len(taskset), m
+    n = len(taskset)
+    arr = np.zeros((40, ))
+    if success:
+        response_bound_map = {}
+        for tree in forest.trees:
+            response_bound_map.update(tree.response_bounds.items())
+        for jdx, val in enumerate(response_bound_map.values()):
+            arr[jdx] = val
+
+    return success, n, m, arr
 
 print("Starting schedulability tests")
 outputs = []
+response_times = []
 for i, res in enumerate(results):
     print('processing', i, 'out of', len(results))
     with multiprocessing.Pool(NUM_THREADS) as pool:
-        outputs = outputs + pool.map(process_data, res)
+        intermediate = pool.map(process_data, res)
+        output_term = list(map(lambda x: (x[0], x[1], x[2]), intermediate))
+        arr = list(map(lambda x: x[3], intermediate))
+
+
+        response_times = response_times + arr
+        outputs = outputs + output_term
 output_df = pd.DataFrame(outputs, columns=['success', 'taskset size', 'processor count'])
+response_times_df = pd.DataFrame(np.array(response_times))
+
 output_df.to_csv('prelim_results.csv')
+response_times_df.to_csv('response_time_data.csv')
 # print(output_df[output_df['success'] == True].head())
