@@ -5,7 +5,39 @@ from partition_forest import PartitionForest
 
 from util import compute_dhp, compute_ihp, compute_response_time_bound, compute_dhp_noci
 
-def sps(taskset: list[Task], m: int) -> tuple[bool, np.array]:
+def edf_schedulable(taskset: list[Task]) -> bool:
+    u = 0
+    for task in taskset:
+        u = u + task.c / task.period
+    return u <= 1
+
+def sps_edf(taskset: list[Task], m: int):
+    # Attempt to schedule
+    # each task sequentially
+    tasklist = sorted(taskset, key=lambda x: (-x.m, x.priority))
+
+    partitions = []
+    budget = m
+
+    for task in tasklist:
+        schedulable = False
+
+        for part in partitions:
+            if edf_schedulable(part + [task]):
+                part.append(task)
+                schedulable = True
+                break
+        if not schedulable and budget >= task.m:
+            partitions.append([task])
+            budget = budget - task.m
+            
+            schedulable = True
+        elif not schedulable:
+            return False, None
+    return True, None
+
+
+def sps_edf(taskset: list[Task], m: int) -> tuple[bool, np.array]:
     forest = PartitionForest(m)
     budget = m
 
