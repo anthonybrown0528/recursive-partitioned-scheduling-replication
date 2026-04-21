@@ -1,11 +1,11 @@
 from task import Task
 
 class Partition:
-    def __init__(self, m: int):
+    def __init__(self, m: int, depth=0):
         self.m = m
         self.tasks = []
 
-        self.depth = 0
+        self.depth = depth
 
         # Maintains how many processors in each disjoint partition
         # are assigned to any task

@@ -19,7 +19,19 @@ class Task:
 
         self.priority = priority
 
+        self.sp = None
+        self.backup_sp = None
+
     def __lt__(self, other):
+
+        # Shared Priority takes precedence if defined
+        if self.sp is not None and other.sp is not None and self.sp != other.sp:
+            return self.sp < other.sp
+        if self.sp is not None and other.sp is None:
+            return True
+        if self.sp is None and other.sp is not None:
+            return False        
+
         if self.priority == other.priority:
             return self.id < other.id
         return self.priority < other.priority 

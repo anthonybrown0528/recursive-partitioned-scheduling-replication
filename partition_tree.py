@@ -18,7 +18,7 @@ class PartitionTree:
 
         self.partition_assignment = dict()
 
-    def create_subpartitions(self, part: Partition):
+    def create_subpartitions(self, part: Partition, use_sp=False):
         
         # Copy partition state
         tasklist = list(part.tasks)
@@ -49,13 +49,18 @@ class PartitionTree:
         if len(shared) == len(tasklist):
             return False
 
-        pl = Partition(mk, part.depth + 1)
-        pr = Partition(part.m - mk, part.depth + 1)
+        pl = Partition(mk, depth=part.depth + 1)
+        pr = Partition(part.m - mk, depth=part.depth + 1)
 
         for task in tasklist:
             self.remove_task(task, [part])
 
         for task in shared:
+
+            if use_sp:
+                task.backup_sp = task.sp
+                task.sp = part.depth
+
             proc_alloc = task_partition_map[task]
             self.add_task(task, [pl, pr], [mk, proc_alloc - mk])
             is_schedulable(task, self.partition_assignment[task], pl, self.dhp, self.ihp, self.response_bounds)
@@ -78,6 +83,8 @@ class PartitionTree:
 
             for task in shared:
                 self.remove_task(task, [pl, pr])
+                if use_sp:
+                    task.sp = task.backup_sp
             for task in list(pl.tasks):
                 self.remove_task(task, [pl])
             for task in list(pr.tasks):
