@@ -5,6 +5,8 @@ class Partition:
         self.m = m
         self.tasks = []
 
+        self.depth = 0
+
         # Maintains how many processors in each disjoint partition
         # are assigned to any task
         self.task_partition_map = {}

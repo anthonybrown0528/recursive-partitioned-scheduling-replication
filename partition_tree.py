@@ -49,8 +49,8 @@ class PartitionTree:
         if len(shared) == len(tasklist):
             return False
 
-        pl = Partition(mk)
-        pr = Partition(part.m - mk)
+        pl = Partition(mk, part.depth + 1)
+        pr = Partition(part.m - mk, part.depth + 1)
 
         for task in tasklist:
             self.remove_task(task, [part])
