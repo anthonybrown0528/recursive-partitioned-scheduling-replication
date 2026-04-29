@@ -47,10 +47,10 @@ for m in num_processors:
         # Iterate over target task set utilization
         for ctr, u_taskset in enumerate(u_gang):
             taskset_util_prefix = f'{ctr}_'
-            filepaths.append((m, n, os.path.join(OUT_DATA_DIR, f'{m_prefix}{n_prefix}{taskset_util_prefix}{IN_DATA_FILE_EXT}')))
+            filepaths.append((m, n, ctr, os.path.join(OUT_DATA_DIR, f'{m_prefix}{n_prefix}{taskset_util_prefix}{IN_DATA_FILE_EXT}')))
 
 def load_data(args):
-    m, n, filepath = args
+    m, n, ctr, filepath = args
 
     df = pd.read_parquet(filepath)
     print("Loaded batch of data:", filepath)
@@ -73,7 +73,7 @@ def load_data(args):
         taskset.append(t)
 
         if len(taskset) == n:
-            taskset_collection.append((taskset, m))
+            taskset_collection.append((taskset, m, ctr))
             taskset = []
     print("Processed data from file:", filepath)
     return taskset_collection
@@ -84,7 +84,7 @@ with multiprocessing.Pool(NUM_THREADS) as pool:
     results = value
     
 def process_data(args):
-    taskset, m = args
+    taskset, m, ctr = args
     success, forest = recursive_gang_schedule(taskset, m)
 
     n = len(taskset)
@@ -96,7 +96,7 @@ def process_data(args):
         for jdx, val in enumerate(response_bound_map.values()):
             arr[jdx] = val
 
-    return success, n, m, arr
+    return success, n, m, ctr, arr
 
 print("Starting schedulability tests")
 outputs = []
@@ -105,15 +105,14 @@ for i, res in enumerate(results):
     print('processing', i, 'out of', len(results))
     with multiprocessing.Pool(NUM_THREADS) as pool:
         intermediate = pool.map(process_data, res)
-        output_term = list(map(lambda x: (x[0], x[1], x[2]), intermediate))
-        arr = list(map(lambda x: x[3], intermediate))
+        output_term = list(map(lambda x: (x[0], x[1], x[2], x[3]), intermediate))
+        arr = list(map(lambda x: x[4], intermediate))
 
 
         response_times = response_times + arr
         outputs = outputs + output_term
-output_df = pd.DataFrame(outputs, columns=['success', 'taskset size', 'processor count'])
+output_df = pd.DataFrame(outputs, columns=['success', 'taskset size', 'processor count', 'taskset util'])
 response_times_df = pd.DataFrame(np.array(response_times))
 
-output_df.to_csv('prelim_results.csv')
-response_times_df.to_csv('response_time_data.csv')
-# print(output_df[output_df['success'] == True].head())
+output_df.to_csv('rps_fp_1_schedulable_results.csv')
+response_times_df.to_csv('rps_fp_1_response_time_data.csv')

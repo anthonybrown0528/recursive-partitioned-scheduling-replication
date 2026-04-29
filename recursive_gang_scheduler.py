@@ -5,7 +5,7 @@ from partition_forest import PartitionForest
 
 from util import compute_dhp, compute_ihp, compute_response_time_bound, compute_dhp_noci
 
-def recursive_gang_schedule(taskset: list[Task], m: int) -> tuple[bool, np.array]:
+def recursive_gang_schedule(taskset: list[Task], m: int, use_sp=False) -> tuple[bool, np.array]:
     forest = PartitionForest(m)
     budget = m
 
@@ -39,7 +39,7 @@ def recursive_gang_schedule(taskset: list[Task], m: int) -> tuple[bool, np.array
                     # dhp_noci = compute_dhp_noci(dhp, tree.dhp, tree.ihp)
                     # compute_response_time_bound(task, dhp, dhp_noci, tree.response_bounds)
 
-                    success = tree.create_subpartitions(leaf, use_sp=True)
+                    success = tree.create_subpartitions(leaf, use_sp=use_sp)
                     
                     # Found a leaf partition which can be subpartitioned
                     # to fit the current task
