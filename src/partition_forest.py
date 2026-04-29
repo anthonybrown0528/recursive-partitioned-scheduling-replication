@@ -1,5 +1,4 @@
-from partition import Partition
-from partition_tree import PartitionTree
+from .partition_tree import PartitionTree
 
 class PartitionForest:
     """Contains a collection of partitions

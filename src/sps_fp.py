@@ -1,5 +1,5 @@
-from task import Task
-from partition_forest import PartitionForest
+from .task import Task
+from .partition_forest import PartitionForest
 
 
 def edf_schedulable(taskset: list[Task]) -> bool:

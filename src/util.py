@@ -1,7 +1,7 @@
 import math
 
-from task import Task
-from partition import Partition
+from .task import Task
+from .partition import Partition
 
 def compute_dhp(task: Task, partitions: set[Partition], dhp: dict[Task, set]) -> set:
     """Compute the DHP set of a task

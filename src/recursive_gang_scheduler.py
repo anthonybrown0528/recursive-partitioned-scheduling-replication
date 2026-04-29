@@ -1,5 +1,5 @@
-from task import Task
-from partition_forest import PartitionForest
+from .task import Task
+from .partition_forest import PartitionForest
 
 
 def recursive_gang_schedule(taskset: list[Task], m: int, use_sp=False) -> tuple[bool, PartitionForest]:

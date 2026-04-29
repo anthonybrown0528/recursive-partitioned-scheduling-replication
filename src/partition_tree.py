@@ -1,7 +1,7 @@
-from task import Task
-from partition import Partition
+from .task import Task
+from .partition import Partition
 
-from util import is_schedulable
+from .util import is_schedulable
 
 class PartitionTree:
     """Contains information about a partition tree

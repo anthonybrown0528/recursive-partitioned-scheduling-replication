@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from task import Task
+from .task import Task
 
 interference_sets = {}
 transformed_interference_sets = {}
@@ -294,8 +294,8 @@ def stationary_schedule(taskset: list[Task], m: int):
     :param m: total number of processors
     :type m: int
 
-    :return: a boolean indicating schedulability
-    :rtype: bool
+    :return: a tuple describing the schedulability and a NoneType for compatibility reasons
+    :rtype: tuple[bool, None]
     """
 
     global tasklist
@@ -317,5 +317,5 @@ def stationary_schedule(taskset: list[Task], m: int):
                 schedulable = True
                 break
         if not schedulable:
-            return False
-    return True
+            return False, None
+    return True, None
