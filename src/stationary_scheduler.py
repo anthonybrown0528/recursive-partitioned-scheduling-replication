@@ -13,6 +13,9 @@ response_bounds = {}
 tasklist = []
 
 def clear():
+    """Initialize the state of the stationary scheduling algorithm
+    """
+
     global interference_sets
     global transformed_interference_sets
     global processor_assignments
@@ -32,6 +35,18 @@ def clear():
     tasklist = []
 
 def compute_suspension_inducing_set(i: int, k: int) -> set[int]:
+    """Compute the Suspension-Inducing set given a task and a suspension-inducing task
+
+    :param i: identifies a :class:`Task`
+    :type i: int
+
+    :param k: identifies suspension-inducing :class:`Task`
+    :type k: int
+
+    :return: a set of indices for suspension-induced :class:`Task`
+    :rtype: set[int]
+    """
+
     suspension_inducer_set = set()
     for j in range(i):
         if j in interference_sets[i] and len(processor_assignments[j].intersection(processor_assignments[k])) == 0:
@@ -40,7 +55,16 @@ def compute_suspension_inducing_set(i: int, k: int) -> set[int]:
     return suspension_inducer_set
 
 
-def compute_interference_set(k: int, mk: int, m: int) -> set[int]:
+def compute_interference_set(k: int) -> set[int]:
+    """Compute the interference set of a task
+
+    :param k: identifies a :class:`Task`
+    :type k: int
+
+    :return: a set of indices for :class:`Task` that interferes with the specified :class:`Task`
+    :rtype: set[int]
+    """
+
     interference_set = set()
     for j in range(k):
         if len(processor_assignments[j].intersection(processor_assignments[k])) != 0:
@@ -48,7 +72,16 @@ def compute_interference_set(k: int, mk: int, m: int) -> set[int]:
     interference_sets[k] = interference_set
     return interference_set
 
-def transform_interference_set(k: int):
+def transform_interference_set(k: int) -> set[int]:
+    """Compute the `s` attribute to each task in the interference set of a task
+
+    :param k: identifies a :class:`Task`
+    :type k: int
+
+    :return: a set of indices for :class:`Task` that interferes with the specified :class:`Task`
+    :rtype: set[int]
+    """
+
     transformed_interference_set = set()
     for i in interference_sets[k]:
         task = tasklist[i]
@@ -66,7 +99,21 @@ def transform_interference_set(k: int):
     transformed_interference_sets[k] = transformed_interference_set
     return transformed_interference_set
 
-def eq1(task: Task, transformed_interference_list: list[int]):
+def eq1(task: Task, transformed_interference_list: list[int]) -> int:
+    """Checks the schedulabilty of a task
+
+    This subroutine assumes X is a vector of zeros
+
+    :param task: a :class:`Task` of which to check schedulability
+    :type task: Task
+
+    :param transformed_interference_list: a list of indices for :class:`Task` that interfere with the given :class:`Task`
+    :type transformed_interference_list: list[int]
+
+    :return: a response time bound for the task if schedulable
+    :rtype: int
+    """
+
     response_bound_old = 0
     response_bound_new = task.c
 
@@ -93,7 +140,21 @@ def eq1(task: Task, transformed_interference_list: list[int]):
             response_bound_new = response_bound_new + term
     return response_bound_new
 
-def eq2(task: Task, transformed_interference_list: list[int]):
+def eq2(task: Task, transformed_interference_list: list[int]) -> int:
+    """Checks the schedulabilty of a task
+
+    This subroutine assigns X based on the values of S and the WCET of the interfering tasks
+
+    :param task: a :class:`Task` of which to check schedulability
+    :type task: Task
+
+    :param transformed_interference_list: a list of indices for :class:`Task` that interfere with the given :class:`Task`
+    :type transformed_interference_list: list[int]
+
+    :return: a response time bound for the task if schedulable
+    :rtype: int
+    """
+
     response_bound_old = 0
     response_bound_new = task.c
 
@@ -125,7 +186,21 @@ def eq2(task: Task, transformed_interference_list: list[int]):
             response_bound_new = response_bound_new + term
     return response_bound_new
 
-def eq3(task: Task, transformed_interference_list: list[int]):
+def eq3(task: Task, transformed_interference_list: list[int]) -> int:
+    """Checks the schedulabilty of a task
+
+    This subroutine assigns X based on a linear combination
+
+    :param task: a :class:`Task` of which to check schedulability
+    :type task: Task
+
+    :param transformed_interference_list: a list of indices for :class:`Task` that interfere with the given :class:`Task`
+    :type transformed_interference_list: list[int]
+
+    :return: a response time bound for the task if schedulable
+    :rtype: int
+    """
+
     response_bound_old = 0
     response_bound_new = task.c
     
@@ -160,7 +235,21 @@ def eq3(task: Task, transformed_interference_list: list[int]):
             response_bound_new = response_bound_new + term
     return response_bound_new
 
-def is_schedulable(k: int, transformed_interference_set: set[int]):
+def is_schedulable(k: int, transformed_interference_set: set[int]) -> bool:
+    """Checks the schedulabilty of a task
+
+    This subroutine performs three checks and returns an indicator of
+    success if any of the checks return a valid response time bound
+    
+    :param k: identifies a :class:`Task`
+    :type k: int
+
+    :param transformed_interference_list: a list of indices for :class:`Task` that interfere with the given :class:`Task`
+    :type transformed_interference_list: list[int]
+
+    :return: a boolean indicating the schedulability of the specified task
+    :rtype: bool
+    """
 
     task = tasklist[k]
     if len(transformed_interference_set) == 0:
@@ -176,6 +265,20 @@ def is_schedulable(k: int, transformed_interference_set: set[int]):
     return True
 
 def assign_processors(k: int, j: int, m: int):
+    """Assign a contiguous set of processors to a given task
+
+    The processors are modeled as a circulary array
+
+    :param k: identifies a :class:`Task`
+    :type k: int
+
+    :param j: indicates the first processor to assign to the task
+    :type j: int
+
+    :param m: number of threads in the task
+    :type m: int
+    """
+
     assignment = set()
     task = tasklist[k]
     for i in range(j, j + task.m):
@@ -183,6 +286,18 @@ def assign_processors(k: int, j: int, m: int):
     processor_assignments[k] = assignment
 
 def stationary_schedule(taskset: list[Task], m: int):
+    """Perform the Stationary Scheduling algorithm with fixed priority.
+
+    :param taskset: list of tasks to schedule
+    :type taskset: list[Task]
+
+    :param m: total number of processors
+    :type m: int
+
+    :return: a boolean indicating schedulability
+    :rtype: bool
+    """
+
     global tasklist
 
     clear()
@@ -193,7 +308,7 @@ def stationary_schedule(taskset: list[Task], m: int):
         schedulable = False
         for j in range(m):
             assign_processors(k, j, m)
-            interference_set = compute_interference_set(k, j, m)
+            interference_set = compute_interference_set(k)
             for i in interference_set:
                 compute_suspension_inducing_set(i, k)
             interference_set = transform_interference_set(k)

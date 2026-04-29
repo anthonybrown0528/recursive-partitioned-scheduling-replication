@@ -1,17 +1,35 @@
-import numpy as np
-
 from task import Task
 from partition_forest import PartitionForest
 
-from util import compute_dhp, compute_ihp, compute_response_time_bound, compute_dhp_noci
 
 def edf_schedulable(taskset: list[Task]) -> bool:
+    """Check whether a given list of tasks is schedulable under Earliest-Deadline-First priority
+
+    :param taskset: a collection of :class:`Task`
+    :type taskset: list[Task]
+
+    :return: a boolean indicating th schedulability of the task set
+    :rtype: bool
+    """
+
     u = 0
     for task in taskset:
         u = u + task.c / task.period
     return u <= 1
 
 def sps_edf(taskset: list[Task], m: int):
+    """Perform the Strictly Paritioned Scheduling algorithm with the Earliest-Deadline-First priority policy.
+
+    :param taskset: list of tasks to schedule
+    :type taskset: list[Task]
+
+    :param m: total number of processors
+    :type m: int
+
+    :return: a tuple describing the schedulability and a NoneType for compatibility reasons
+    :rtype: tuple[bool, None]
+    """
+
     # Attempt to schedule
     # each task sequentially
     tasklist = sorted(taskset, key=lambda x: (-x.m, x.priority))
@@ -37,7 +55,19 @@ def sps_edf(taskset: list[Task], m: int):
     return True, None
 
 
-def sps_edf(taskset: list[Task], m: int) -> tuple[bool, np.array]:
+def sps_fp(taskset: list[Task], m: int) -> tuple[PartitionForest]:
+    """Perform the Strictly Paritioned Scheduling algorithm with fixed priority.
+
+    :param taskset: list of tasks to schedule
+    :type taskset: list[Task]
+
+    :param m: total number of processors
+    :type m: int
+
+    :return: a tuple describing the schedulability and response time bounds of tasks
+    :rtype: tuple[bool, PartitionForest]
+    """
+
     forest = PartitionForest(m)
     budget = m
 
