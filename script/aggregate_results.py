@@ -1,11 +1,17 @@
-import matplotlib
+import matplotlib.pyplot as plt
 import pandas as pd
 import os
 
 def load_data(data_path: str):
     df = pd.read_csv(data_path)
+    return agg_data_with_util(df)
 
+def agg_data(df: pd.DataFrame):
     group = df.groupby(['success', 'taskset size', 'processor count'])
+    return group.count().rename(columns={"Unnamed: 0": 'count'})
+
+def agg_data_with_util(df: pd.DataFrame):
+    group = df.groupby(['success', 'taskset size', 'processor count', 'taskset util'])
     return group.count().rename(columns={"Unnamed: 0": 'count'})
 
 def compute_sched_ratio(df: pd.DataFrame):
@@ -39,7 +45,19 @@ for name, dataframe in data_map.items():
     normalizer = compute_sched_ratio(data_map[data_norm_name])
 
     data_norm_series = compute_normed_ratio(sched_ratio_data, normalizer)
-    normed_data_ratios[name] = data_norm_series
+    normed_data_ratios[name] = data_norm_series[data_norm_series.notna()]
+    
+
 
 for name, series in normed_data_ratios.items():
     print(series)
+
+leg = []
+for name, series in normed_data_ratios.items():
+    series.loc[32, 16].plot()
+    leg.append(name)
+
+plt.legend(leg)
+
+plt.grid(visible=True)
+plt.show()
