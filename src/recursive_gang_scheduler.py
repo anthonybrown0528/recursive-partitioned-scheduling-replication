@@ -14,7 +14,7 @@ def recursive_gang_schedule(taskset: list[Task], m: int, use_sp=False) -> tuple[
     :param use_sp: flag that toggles shared priority, defaults to False
     :type use_sp: bool
 
-    :return: a tuple describing the schedulability and response time bounds of tasks
+    :return: a tuple describing the schedulability and response time bounds of tasks, and number of tasks in schedulable set
     :rtype: tuple[bool, PartitionForest]
     """
 
@@ -25,6 +25,8 @@ def recursive_gang_schedule(taskset: list[Task], m: int, use_sp=False) -> tuple[
     # Attempt to schedule
     # each task sequentially
     tasklist = sorted(taskset, key=lambda x: (-x.m, x.priority))
+
+    num_scheduled_tasks = 0
 
     # Iterate over each task in the provided list
     for task in tasklist:
@@ -69,8 +71,9 @@ def recursive_gang_schedule(taskset: list[Task], m: int, use_sp=False) -> tuple[
             # Terminate the algorithm prematurely
             # if any task cannot be scheduled
             if not schedulable:
-                return schedulable, forest
+                return schedulable, forest, num_scheduled_tasks
+        num_scheduled_tasks = num_scheduled_tasks + 1
             
     # Return the schedulability of the taskset and the 
     # response time bounds if schedulable
-    return schedulable, forest
+    return schedulable, forest, num_scheduled_tasks

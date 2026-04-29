@@ -14,25 +14,32 @@ def compute_sched_ratio(df: pd.DataFrame):
 def compute_normed_ratio(data: pd.Series, factor: pd.Series):
     return data / factor
 
-RESULT_DATA_PATH = os.path.join('data', 'output')
+# RESULT_DATA_PATH = os.path.join('data', 'output')
+RESULT_DATA_PATH = os.path.join('test_output')
 
-rps_fp1 = load_data(os.path.join(RESULT_DATA_PATH, 'rps_fp1_results.csv'))
-rps_fp2 = load_data(os.path.join(RESULT_DATA_PATH, 'rps_fp2_results.csv'))
+datafiles = [
+    ('RPS-FP1', 'rps-fp1_schedulability.csv'),
+    ('RPS-FP2', 'rps-fp2_schedulability.csv'),
+    ('SPS-FP', 'sps-fp_schedulability.csv'),
+    ('SPS-EDF', 'sps-edf_schedulability.csv'),
+    ('Stationary Schedule', 'stationary_schedulability.csv')
+]
 
-sps_fp_data = load_data(os.path.join(RESULT_DATA_PATH, 'sps_fp_results.csv'))
-sps_edf_data = load_data(os.path.join(RESULT_DATA_PATH, 'sps_edf_results.csv'))
+data_map = {}
+normed_data_ratios = {}
 
-stationary_data = load_data(os.path.join(RESULT_DATA_PATH, 'stationary_schedule_results.csv'))
+data_norm_name = 'SPS-FP'
 
-rps_sched_ratio_series = compute_sched_ratio(rps_fp1)
-sps_sched_ratio_series = compute_sched_ratio(sps_fp_data)
-stationary_sched_ratio_series = compute_sched_ratio(stationary_data)
+for (name, filename) in datafiles:
+    data = load_data(os.path.join(RESULT_DATA_PATH, filename))
+    data_map[name] = data
 
-sps_normed_ratio_series = compute_normed_ratio(sps_sched_ratio_series, sps_sched_ratio_series)
-print(sps_normed_ratio_series)
+for name, dataframe in data_map.items():
+    sched_ratio_data = compute_sched_ratio(dataframe)
+    normalizer = compute_sched_ratio(data_map[data_norm_name])
 
-rps_normed_ratio_series = compute_normed_ratio(rps_sched_ratio_series, sps_sched_ratio_series)
-print(rps_normed_ratio_series)
+    data_norm_series = compute_normed_ratio(sched_ratio_data, normalizer)
+    normed_data_ratios[name] = data_norm_series
 
-stationary_normed_ratio_series = compute_normed_ratio(stationary_sched_ratio_series, sps_sched_ratio_series)
-print(stationary_normed_ratio_series)
+for name, series in normed_data_ratios.items():
+    print(series)

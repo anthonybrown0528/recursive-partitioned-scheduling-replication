@@ -37,6 +37,8 @@ def sps_edf(taskset: list[Task], m: int):
     partitions = []
     budget = m
 
+    num_scheduled_tasks = 0
+
     for task in tasklist:
         schedulable = False
 
@@ -51,8 +53,9 @@ def sps_edf(taskset: list[Task], m: int):
             
             schedulable = True
         elif not schedulable:
-            return False, None
-    return True, None
+            return False, None, num_scheduled_tasks
+        num_scheduled_tasks = num_scheduled_tasks + 1
+    return True, None, num_scheduled_tasks
 
 
 def sps_fp(taskset: list[Task], m: int) -> tuple[PartitionForest]:
@@ -75,6 +78,7 @@ def sps_fp(taskset: list[Task], m: int) -> tuple[PartitionForest]:
     # each task sequentially
     tasklist = sorted(taskset, key=lambda x: (-x.m, x.priority))
 
+    num_scheduled_tasks = 0
     for task in tasklist:
         schedulable = False
         mi = task.m
@@ -92,6 +96,7 @@ def sps_fp(taskset: list[Task], m: int) -> tuple[PartitionForest]:
             budget = budget - mi
             schedulable = True
         elif not schedulable:
-            return False, None
+            return False, None, num_scheduled_tasks
+        num_scheduled_tasks = num_scheduled_tasks + 1
 
-    return schedulable, forest
+    return schedulable, forest, num_scheduled_tasks

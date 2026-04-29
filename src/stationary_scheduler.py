@@ -294,13 +294,15 @@ def stationary_schedule(taskset: list[Task], m: int):
     :param m: total number of processors
     :type m: int
 
-    :return: a tuple describing the schedulability and a NoneType for compatibility reasons
+    :return: a tuple describing the schedulability and response time bounds of tasks, and number of tasks in schedulable set
     :rtype: tuple[bool, None]
     """
 
     global tasklist
 
     clear()
+
+    num_scheduled_tasks = 0
 
     sorted_tasks = sorted(taskset)
     tasklist = sorted_tasks
@@ -315,7 +317,8 @@ def stationary_schedule(taskset: list[Task], m: int):
 
             if is_schedulable(k, interference_set):
                 schedulable = True
+                num_scheduled_tasks = num_scheduled_tasks + 1
                 break
         if not schedulable:
-            return False, None
-    return True, None
+            return False, None, num_scheduled_tasks
+    return True, None, num_scheduled_tasks
