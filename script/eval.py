@@ -92,15 +92,15 @@ def process_data(args):
     taskset, m, ctr, scheduler_type = scheduler_args
 
     if scheduler_type == "rps-fp1":
-        success, forest = recursive_gang_schedule(taskset, m)
+        success, forest, num_scheduled_tasks = recursive_gang_schedule(taskset, m)
     elif scheduler_type == "rps-fp2":
-        success, forest = recursive_gang_schedule(taskset, m, use_sp=True)
+        success, forest, num_scheduled_tasks = recursive_gang_schedule(taskset, m, use_sp=True)
     elif scheduler_type == "sps-fp":
-        success, forest = sps_fp(taskset, m)
+        success, forest, num_scheduled_tasks = sps_fp(taskset, m)
     elif scheduler_type == "sps-edf":
-        success, forest = sps_edf(taskset, m)
+        success, forest, num_scheduled_tasks = sps_edf(taskset, m)
     elif scheduler_type == "stationary":
-        success, forest = stationary_schedule(taskset, m)
+        success, forest, num_scheduled_tasks = stationary_schedule(taskset, m)
     else:
         raise RuntimeError(f"Invalid scheduler_type: {scheduler_type}")
 
@@ -113,7 +113,7 @@ def process_data(args):
         for jdx, val in enumerate(response_bound_map.values()):
             arr[jdx] = val
 
-    return success, n, m, ctr, arr
+    return success, n, m, ctr, num_scheduled_tasks, arr
 
 def main():
     parser = argparse.ArgumentParser(description="Generate text with trained model")
@@ -161,13 +161,13 @@ def main():
         print('processing', i, 'out of', len(results))
         with multiprocessing.Pool(NUM_THREADS) as pool:
             intermediate = pool.map(process_data, res)
-            output_term = list(map(lambda x: (x[0], x[1], x[2], x[3]), intermediate))
-            arr = list(map(lambda x: x[4], intermediate))
+            output_term = list(map(lambda x: (x[0], x[1], x[2], x[3], x[4]), intermediate))
+            arr = list(map(lambda x: x[5], intermediate))
 
 
             response_times = response_times + arr
             outputs = outputs + output_term
-    output_df = pd.DataFrame(outputs, columns=['success', 'taskset size', 'processor count', 'taskset util'])
+    output_df = pd.DataFrame(outputs, columns=['success', 'taskset size', 'processor count', 'taskset util', 'schedulable tasks'])
     response_times_df = pd.DataFrame(np.array(response_times))
 
     output_df.to_csv(output_schedulability_path)
