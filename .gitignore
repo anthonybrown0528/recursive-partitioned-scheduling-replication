@@ -4,3 +4,5 @@ __pycache__/
 .data_cache/
 .venv/
 docs/
+*_responsetime*.csv
+*.pkl

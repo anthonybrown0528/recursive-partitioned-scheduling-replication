@@ -1,4 +1,5 @@
 import os
+import pickle
 import argparse
 import numpy as np
 import pandas as pd
@@ -105,15 +106,37 @@ def process_data(args):
         raise RuntimeError(f"Invalid scheduler_type: {scheduler_type}")
 
     n = len(taskset)
-    arr = np.zeros((40, ))
+
+    num_partitions = 0
+    util_var = -1
+    
+    slack_mean = -1
+    slack_var = -1
+
+    # arr = np.zeros((40, ))
     if success and forest is not None:
+        partition_util = []
+        slacks = []
         response_bound_map = {}
+        for part, _ in forest.leaves():
+            util = 0
+            for task in part.tasks:
+                util = util + task.c / task.m
+            partition_util.append(util)
+
+            num_partitions = num_partitions + 1
+        partition_util = np.array(partition_util)
+        util_var = np.var(partition_util)
+
         for tree in forest.trees:
             response_bound_map.update(tree.response_bounds.items())
-        for jdx, val in enumerate(response_bound_map.values()):
-            arr[jdx] = val
+        for jdx, (key, val) in enumerate(response_bound_map.items()):
+            slacks.append(key.d - val)
+        slacks = np.array(slacks)
+        slack_mean = np.mean(slacks)
+        slack_var = np.var(slacks)
 
-    return success, n, m, ctr, num_scheduled_tasks, arr
+    return success, n, m, ctr, num_scheduled_tasks, num_partitions, util_var, slack_mean, slack_var
 
 def main():
     parser = argparse.ArgumentParser(description="Generate text with trained model")
@@ -144,34 +167,48 @@ def main():
 
     args = parser.parse_args()
 
-    get_file_paths(args.input_dir, args.type)
-
     output_schedulability_path = os.path.join(args.output_dir, f"{args.output}_schedulability.csv")
-    output_response_time_path = os.path.join(args.output_dir, f"{args.output}_responsetime.csv")
 
+    print('Loading input data...')
     results = []
-    with multiprocessing.Pool(NUM_THREADS) as pool:
-        value = pool.map(load_data, filepaths)
-        results = value
+    with open('packed_data.pkl', 'rb') as f:
+        print('Opened input data file...')
+        results = pickle.load(f)
+
+    def update_tuple(x):
+        y = (x[0], x[1], x[2], args.type)
+        return y
+    
+    def update_collection(x):
+        y = list(map(update_tuple, x))
+        return y
+    
+    print('Setting scheduling type...')
+    results = list(map(update_collection, results))
 
     print("Starting schedulability tests")
     outputs = []
-    response_times = []
     for i, res in enumerate(results):
         print('processing', i, 'out of', len(results))
         with multiprocessing.Pool(NUM_THREADS) as pool:
             intermediate = pool.map(process_data, res)
-            output_term = list(map(lambda x: (x[0], x[1], x[2], x[3], x[4]), intermediate))
-            arr = list(map(lambda x: x[5], intermediate))
+            output_term = intermediate
 
-
-            response_times = response_times + arr
             outputs = outputs + output_term
-    output_df = pd.DataFrame(outputs, columns=['success', 'taskset size', 'processor count', 'taskset util', 'schedulable tasks'])
-    response_times_df = pd.DataFrame(np.array(response_times))
 
+    cols = [
+        'success', 
+        'taskset_size', 
+        'processor_count', 
+        'taskset_util', 
+        'schedulable_tasks',
+        'num_partitions',
+        'part_util_var',
+        'slack_mean',
+        'slack_var'
+    ]
+    output_df = pd.DataFrame(outputs, columns=cols)
     output_df.to_csv(output_schedulability_path)
-    response_times_df.to_csv(output_response_time_path)
 
 if __name__ == '__main__':
     main()

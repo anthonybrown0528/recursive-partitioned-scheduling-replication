@@ -1,4 +1,4 @@
-,success,taskset size,processor count,taskset util,schedulable tasks
+,success,taskset_size,processor_count,taskset_util,schedulable_tasks
 0,True,8,8,0,8
 1,True,8,8,0,8
 2,True,8,8,0,8

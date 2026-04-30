@@ -4,14 +4,14 @@ import os
 
 def load_data(data_path: str):
     df = pd.read_csv(data_path)
-    return agg_data_with_util(df)
+    return agg_data(df)
 
 def agg_data(df: pd.DataFrame):
-    group = df.groupby(['success', 'taskset size', 'processor count'])
+    group = df.groupby(['success', 'taskset_size', 'processor_count'])
     return group.count().rename(columns={"Unnamed: 0": 'count'})
 
 def agg_data_with_util(df: pd.DataFrame):
-    group = df.groupby(['success', 'taskset size', 'processor count', 'taskset util'])
+    group = df.groupby(['success', 'taskset_size', 'processor_count', 'taskset_util'])
     return group.count().rename(columns={"Unnamed: 0": 'count'})
 
 def compute_sched_ratio(df: pd.DataFrame):
@@ -21,7 +21,7 @@ def compute_normed_ratio(data: pd.Series, factor: pd.Series):
     return data / factor
 
 # RESULT_DATA_PATH = os.path.join('data', 'output')
-RESULT_DATA_PATH = os.path.join('test_output')
+RESULT_DATA_PATH = os.path.join('data', 'output')
 
 datafiles = [
     ('RPS-FP1', 'rps-fp1_schedulability.csv'),
@@ -49,15 +49,46 @@ for name, dataframe in data_map.items():
     
 
 
-for name, series in normed_data_ratios.items():
-    print(series)
+# for name, series in normed_data_ratios.items():
+#     print(series)
 
 leg = []
 for name, series in normed_data_ratios.items():
-    series.loc[32, 16].plot()
+    # series.loc[32, 16].plot()
+    series.plot()
     leg.append(name)
 
 plt.legend(leg)
 
 plt.grid(visible=True)
-plt.show()
+# plt.show()
+
+res = None
+for name, series, in normed_data_ratios.items():
+    if res is None:
+        res = series.rename(name)
+    else:
+        res = pd.concat([res, series.rename(name)], axis=1)
+
+
+print('\\begin{tabular}{|l', end='')
+print(*(['|c'] * len(res.columns)), '|', sep='', end='}\n')
+
+print('\\hline')
+header = ['(n, m)'] + list(res.columns)
+for idx, head in enumerate(header):
+    if idx == 0:
+        print("\\textbf{", head, "}", end=' ')
+    else:
+        print('&', "\\textbf{", head, "}", end=' ')
+print('\\\\')
+
+for (index, data) in res.iterrows():
+
+    print(index, end=' ')
+    for d in data:
+        print('&', '%.3f' % d, end=' ')
+    print('\\\\')
+    print('\\hline')
+
+print('\\end{tabular}')
