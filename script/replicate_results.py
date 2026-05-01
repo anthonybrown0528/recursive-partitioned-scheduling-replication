@@ -20,7 +20,7 @@ def compute_sched_ratio(df: pd.DataFrame):
 def compute_normed_ratio(data: pd.Series, factor: pd.Series):
     return data / factor
 
-# RESULT_DATA_PATH = os.path.join('data', 'output')
+# RESULT_DATA_PATH = os.path.join('test_output')
 RESULT_DATA_PATH = os.path.join('data', 'output')
 
 datafiles = [

@@ -6,10 +6,15 @@ import pandas as pd
 
 
 RESULT_DATA_PATH = os.path.join('data', 'output')
+# RESULT_DATA_PATH = os.path.join('test_output')
 
 datafiles = [
-    ('RPS-FP1', 'rps-fp1_schedulability.csv'),
-    ('RPS-FP2', 'rps-fp2_schedulability.csv'),
+    ('RPS-FP1-DM', 'rps-fp1_schedulability.csv'),
+    ('RPS-FP2-DM', 'rps-fp2_schedulability.csv'),
+    ('RPS-FP1-RM', 'rps-fp1-rm_schedulability.csv'),
+    ('RPS-FP2-RM', 'rps-fp2-rm_schedulability.csv'),
+    ('RPS-FP1-RAND', 'rps-fp1-rand_schedulability.csv'),
+    ('RPS-FP2-RAND', 'rps-fp2-rand_schedulability.csv'),
 ]
 
 data_map = {}
@@ -19,66 +24,72 @@ for (name, filename) in datafiles:
     data = pd.read_csv(os.path.join(RESULT_DATA_PATH, filename))
     data_map[name] = data
 
+def plot_by_taskset_util(data_attribute: str, ylabel: str, success=True):
+    for (name, df) in data_map.items():
+        successful = df[df['success'] == success]
+
+        view = successful[['taskset_size', 'processor_count', 'taskset_util', data_attribute]]
+        aggregate = view.groupby(by=['taskset_size', 'processor_count', 'taskset_util'])
+        
+        slack_mean = aggregate.mean()
+        slack_std = aggregate.std()
+
+        mean_subset = slack_mean.loc[NUM_TASKS, NUM_PROCESSORS, :]
+        std_subset = slack_std.loc[NUM_TASKS, NUM_PROCESSORS, :]
+
+        plt.errorbar(x=mean_subset.index, y=mean_subset[data_attribute], yerr=std_subset[data_attribute], label=name, capsize=3, marker='o')
+
+    plt.grid(visible=True)
+
+    plt.xlabel('Gang Task Set Utilization ($i \\times 0.1 + 0.1$)')
+    plt.ylabel(ylabel=ylabel)
+
+    plt.legend()
+    plt.show()
+
+def plot_by_taskset_size_processor_count(data_attribute: str, ylabel: str, success=True):
+    for i, (name, df) in enumerate(data_map.items()):
+        successful = df[df['success'] == success]
+
+        view = successful[['taskset_size', 'processor_count', 'taskset_util', data_attribute]]
+        aggregate = view.groupby(by=['taskset_size', 'processor_count', 'taskset_util'])
+
+        slack_mean = aggregate.mean()
+
+        mean_subset = slack_mean.loc[:, :, TASKSET_UTIL]
+        x = list(map(lambda x: str(x), mean_subset.index.to_numpy().tolist()))
+
+        width = 0.1
+        gap = 0.01
+
+        plt.bar(np.arange(len(x)) - (i * 2) * (width/2 + gap), mean_subset[data_attribute], width=width, tick_label=x, label=name)
+
+    plt.ylabel(ylabel=ylabel)
+
+    plt.legend()
+    plt.show()
+
 """View Slack Statistics as a Function of Total Gang Taskset Utilization"""
 
-NUM_PROCESSORS = 8
-NUM_TASKS = 8
+NUM_PROCESSORS = 16
+NUM_TASKS = 40
 
-for (name, df) in data_map.items():
-    successful = df[df['success'] == True]
+TASKSET_UTIL = 5
 
-    view = successful[['taskset_size', 'processor_count', 'taskset_util', 'slack_mean']]
-    aggregate = view.groupby(by=['taskset_size', 'processor_count', 'taskset_util'])
-    
-    slack_mean = aggregate.mean()
-    slack_std = aggregate.std()
+data_attributes = [
+    ('slack_mean', 'Average slack (ms)', True),
+    ('part_util_var', 'Partition Utilization Variance', True),
+    ('schedulable_tasks', '# Schedulable Tasks', False),
+]
 
-    mean_subset = slack_mean.loc[NUM_TASKS, NUM_PROCESSORS, :]
-    std_subset = slack_std.loc[NUM_TASKS, NUM_PROCESSORS, :]
+for (attrib, ylabel, success) in data_attributes:
+    plot_by_taskset_util(attrib, ylabel, success=success)
 
-    plt.errorbar(x=mean_subset.index, y=mean_subset['slack_mean'], yerr=std_subset['slack_mean'], label=name)
-
-plt.legend()
-plt.show()
+for (attrib, ylabel, success) in data_attributes:
+    plot_by_taskset_size_processor_count(attrib, ylabel, success=success)
 
 """View # scheduled tasks in tasksets where not all are schedulable"""
-
-
-for (name, df) in data_map.items():
-    successful = df[df['success'] == False]
-
-    view = successful[['taskset_size', 'processor_count', 'taskset_util', 'schedulable_tasks']]
-    aggregate = view.groupby(by=['taskset_size', 'processor_count', 'taskset_util'])
-
-    slack_mean = aggregate.mean()
-    slack_std = aggregate.std()
-
-    mean_subset = slack_mean.loc[NUM_TASKS, NUM_PROCESSORS, :]
-    std_subset = slack_std.loc[NUM_TASKS, NUM_PROCESSORS, :]
-
-    plt.errorbar(x=mean_subset.index, y=mean_subset['schedulable_tasks'], yerr=std_subset['schedulable_tasks'], label=name)
-
-plt.legend()
-plt.show()
-
 """View utilization variance across partitions"""
-
-
-for i, (name, df) in enumerate(data_map.items()):
-    successful = df[df['success'] == True]
-
-    view = successful[['taskset_size', 'processor_count', 'taskset_util', 'part_util_var']]
-    aggregate = view.groupby(by=['taskset_size', 'processor_count', 'taskset_util'])
-
-    slack_mean = aggregate.mean()
-    slack_std = aggregate.std()
-
-    mean_subset = slack_mean.loc[:, :, 6]
-    std_subset = slack_std.loc[:, :, 1]
-    x = list(map(lambda x: str(x), mean_subset.index.to_numpy().tolist()))
-
-    width = 0.4
-
-    plt.bar(np.arange(len(x)) + (i * 2 - 1) * width/2, mean_subset['part_util_var'], width=width, tick_label=x, label=name)
-plt.legend()
-plt.show()
+"""View # Scheduled Tasks over Taskset size and # Processors"""
+"""View Task Slack over Taskset size and # Processors"""
+"""View utilization variance across partitions"""

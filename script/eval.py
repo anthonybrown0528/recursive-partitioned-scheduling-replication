@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 import pandas as pd
 import multiprocessing
+import random
 from pathlib import Path
 
 import sys
@@ -125,6 +126,8 @@ def process_data(args):
             partition_util.append(util)
 
             num_partitions = num_partitions + 1
+        if forest.m > 0:
+            partition_util.append(0)
         partition_util = np.array(partition_util)
         util_var = np.var(partition_util)
 
@@ -183,8 +186,43 @@ def main():
         y = list(map(update_tuple, x))
         return y
     
+    def rate_monotonic(x):
+        x.priority = x.period
+        return x
+
+    def augment_tuple(x):
+        z = list(map(rate_monotonic, x[0]))
+
+        y = (z, x[1], x[2], x[3])
+        return y
+
+    def use_rate_monotonic(x):
+        y = list(map(augment_tuple, x))
+        return y
+
+    def random_priority(x):
+        x.priority = random.randint(0, 1000)
+        return x
+
+    def augment_tuple_rand(x):
+        z = list(map(random_priority, x[0]))
+
+        y = (z, x[1], x[2], x[3])
+        return y
+
+    def use_random(x):
+        y = list(map(augment_tuple_rand, x))
+        return y
+
+    
     print('Setting scheduling type...')
     results = list(map(update_collection, results))
+
+    # print('Assigning rate-monotonic priority...')
+    # results = list(map(use_rate_monotonic, results))
+
+    print('Assigning random priority...')
+    results = list(map(use_random, results))
 
     print("Starting schedulability tests")
     outputs = []
