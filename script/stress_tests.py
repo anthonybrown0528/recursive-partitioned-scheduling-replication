@@ -63,3 +63,11 @@ print_forest_details(forest)
 success, _, _, _, forest = process_data(create_taskset(taskset2), 4, False)
 print(success)
 print_forest_details(forest)
+
+success, _, _, _, forest = process_data(create_taskset(taskset1), 5, True)
+print(success)
+print_forest_details(forest)
+
+success, _, _, _, forest = process_data(create_taskset(taskset2), 4, True)
+print(success)
+print_forest_details(forest)
