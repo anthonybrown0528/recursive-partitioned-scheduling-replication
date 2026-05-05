@@ -8,6 +8,8 @@ import pandas as pd
 RESULT_DATA_PATH = os.path.join('data', 'output')
 # RESULT_DATA_PATH = os.path.join('test_output')
 
+FIGURE_PATH = 'figure'
+
 datafiles = [
     ('RPS-FP1-DM', 'rps-fp1_schedulability.csv'),
     ('RPS-FP2-DM', 'rps-fp2_schedulability.csv'),
@@ -22,6 +24,9 @@ normed_data_ratios = {}
 
 for (name, filename) in datafiles:
     data = pd.read_csv(os.path.join(RESULT_DATA_PATH, filename))
+    data['part_util_std'] = np.sqrt(data['part_util_var'])
+    data['norm_part_util_std'] = np.sqrt(data['norm_part_util_var'])
+
     data_map[name] = data
 
 def plot_by_taskset_util(data_attribute: str, ylabel: str, success=True):
@@ -37,14 +42,18 @@ def plot_by_taskset_util(data_attribute: str, ylabel: str, success=True):
         mean_subset = slack_mean.loc[NUM_TASKS, NUM_PROCESSORS, :]
         std_subset = slack_std.loc[NUM_TASKS, NUM_PROCESSORS, :]
 
+
         plt.errorbar(x=mean_subset.index, y=mean_subset[data_attribute], yerr=std_subset[data_attribute], label=name, capsize=3, marker='o')
 
     plt.grid(visible=True)
 
-    plt.xlabel('Gang Task Set Utilization ($i \\times 0.1 + 0.1$)')
+    plt.xlabel('Gang Task Set Utilization ($i \\times 0.1m + 0.1m$)')
     plt.ylabel(ylabel=ylabel)
 
+    plt.title(data_attribute.replace('_', ' ').capitalize() + ' where $m = ' + str(NUM_PROCESSORS) + ', n = ' + str(NUM_TASKS) + '$')
     plt.legend()
+
+    plt.savefig(os.path.join(FIGURE_PATH, data_attribute + f'_M{NUM_PROCESSORS}_N{NUM_TASKS}.png'))
     plt.show()
 
 def plot_by_taskset_size_processor_count(data_attribute: str, ylabel: str, success=True):
@@ -57,6 +66,8 @@ def plot_by_taskset_size_processor_count(data_attribute: str, ylabel: str, succe
         slack_mean = aggregate.mean()
 
         mean_subset = slack_mean.loc[:, :, TASKSET_UTIL]
+        mean_subset = mean_subset.sort_index(level=1)
+
         x = list(map(lambda x: str(x), mean_subset.index.to_numpy().tolist()))
 
         width = 0.1
@@ -64,9 +75,14 @@ def plot_by_taskset_size_processor_count(data_attribute: str, ylabel: str, succe
 
         plt.bar(np.arange(len(x)) - (i * 2) * (width/2 + gap), mean_subset[data_attribute], width=width, tick_label=x, label=name)
 
+    plt.title(data_attribute.replace('_', ' ').capitalize() + ' where $U_{gang} = ' + str(round((TASKSET_UTIL + 1) * 0.1, ndigits=1)) + 'm$')
     plt.ylabel(ylabel=ylabel)
+    plt.xlabel(xlabel='(n, m)')
 
-    plt.legend()
+    plt.ylim((0, 0.5))
+    plt.legend(loc='best')
+
+    plt.savefig(os.path.join(FIGURE_PATH, data_attribute + f'_u{TASKSET_UTIL}.png'))
     plt.show()
 
 """View Slack Statistics as a Function of Total Gang Taskset Utilization"""
@@ -77,9 +93,11 @@ NUM_TASKS = 40
 TASKSET_UTIL = 5
 
 data_attributes = [
-    ('slack_mean', 'Average slack (ms)', True),
-    ('part_util_var', 'Partition Utilization Variance', True),
-    ('schedulable_tasks', '# Schedulable Tasks', False),
+    # ('slack_mean', 'Average slack (ms)', True),
+    # ('num_partitions', 'Number of Created Partitions', True),
+    # ('part_util_std', 'Partition Utilization Standard Deviation', True),
+    ('norm_part_util_std', 'Normalized Partition Utilization Standard Deviation', True),
+    # ('schedulable_tasks', '# Schedulable Tasks', False),
 ]
 
 for (attrib, ylabel, success) in data_attributes:

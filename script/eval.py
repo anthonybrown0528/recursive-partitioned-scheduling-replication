@@ -109,7 +109,11 @@ def process_data(args):
     n = len(taskset)
 
     num_partitions = 0
+    util_mean = -1
     util_var = -1
+
+    norm_util_mean = -1
+    norm_util_var = -1
     
     slack_mean = -1
     slack_var = -1
@@ -117,19 +121,29 @@ def process_data(args):
     # arr = np.zeros((40, ))
     if success and forest is not None:
         partition_util = []
+        norm_part_util = []
         slacks = []
         response_bound_map = {}
         for part, _ in forest.leaves():
             util = 0
+            norm_util = 0
             for task in part.tasks:
-                util = util + task.c / task.m
+                util = util + task.c / task.period
+                norm_util = norm_util + (task.c / task.period) * task.m
             partition_util.append(util)
+            norm_part_util.append(norm_util / part.m)
 
             num_partitions = num_partitions + 1
         if forest.m > 0:
             partition_util.append(0)
+            norm_part_util.append(0)
         partition_util = np.array(partition_util)
         util_var = np.var(partition_util)
+        util_mean = np.mean(partition_util)
+
+        norm_part_util = np.array(norm_part_util)
+        norm_util_var = np.var(norm_part_util)
+        norm_util_mean = np.mean(norm_part_util)
 
         for tree in forest.trees:
             response_bound_map.update(tree.response_bounds.items())
@@ -139,7 +153,7 @@ def process_data(args):
         slack_mean = np.mean(slacks)
         slack_var = np.var(slacks)
 
-    return success, n, m, ctr, num_scheduled_tasks, num_partitions, util_var, slack_mean, slack_var
+    return success, n, m, ctr, num_scheduled_tasks, num_partitions, util_mean, util_var, norm_util_mean, norm_util_var, slack_mean, slack_var
 
 def main():
     parser = argparse.ArgumentParser(description="Generate text with trained model")
@@ -241,7 +255,10 @@ def main():
         'taskset_util', 
         'schedulable_tasks',
         'num_partitions',
+        'part_util_mean',
         'part_util_var',
+        'norm_part_util_mean',
+        'norm_part_util_var',
         'slack_mean',
         'slack_var'
     ]
