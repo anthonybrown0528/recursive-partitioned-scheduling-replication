@@ -70,25 +70,27 @@ for name, series, in normed_data_ratios.items():
     else:
         res = pd.concat([res, series.rename(name)], axis=1)
 
+def print_tex_code(res: pd.DataFrame):
+    print('\\begin{tabular}{|l', end='')
+    print(*(['|c'] * len(res.columns)), '|', sep='', end='}\n')
 
-print('\\begin{tabular}{|l', end='')
-print(*(['|c'] * len(res.columns)), '|', sep='', end='}\n')
-
-print('\\hline')
-header = ['(n, m)'] + list(res.columns)
-for idx, head in enumerate(header):
-    if idx == 0:
-        print("\\textbf{", head, "}", end=' ')
-    else:
-        print('&', "\\textbf{", head, "}", end=' ')
-print('\\\\')
-
-for (index, data) in res.iterrows():
-
-    print(index, end=' ')
-    for d in data:
-        print('&', '%.3f' % d, end=' ')
-    print('\\\\')
     print('\\hline')
+    header = ['(n, m)'] + list(res.columns)
+    for idx, head in enumerate(header):
+        if idx == 0:
+            print("\\textbf{", head, "}", end=' ')
+        else:
+            print('&', "\\textbf{", head, "}", end=' ')
+    print('\\\\')
 
-print('\\end{tabular}')
+    for (index, data) in res.iterrows():
+
+        print(index, end=' ')
+        for d in data:
+            print('&', '%.3f' % d, end=' ')
+        print('\\\\')
+        print('\\hline')
+
+    print('\\end{tabular}')
+
+print_tex_code(res[['SPS-FP', 'SPS-EDF', 'Stationary Schedule']])
