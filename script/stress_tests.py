@@ -1,7 +1,7 @@
-from pathlib import Path
-
+# Make Python modules in `src` folder accessible
+import os
 import sys
-sys.path.append(str(Path(__file__).parent.parent))
+sys.path.append(os.path.abspath('./'))
 
 from src.task import Task
 
