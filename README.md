@@ -45,8 +45,7 @@ Python packages used
 ```bash
 git clone https://github.com/anthonybrown0528/recursive-partitioned-scheduling-replication.git
 
-cd recursive-partitioned-scheduling
-python 
+cd recursive-partitioned-scheduling-replication 
 ```
 
 ### To run evaluation scripts
