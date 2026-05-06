@@ -21,7 +21,7 @@
 	- `eval.py`: Evaluates a task-partition mapping algorithm using the input data in `data/input`
 	- `replicate_results.py`: Reads the output evaluation data from `data/output` and generates a table in LaTex format to replicate the results from the original paper
 	- `prepare_data.py`: packs the task set input data into a single **Pickle** file for faster batch loading during evaluation
-	- `stress_test.py`: runs the **RPS** algorithm on a failing edge case
+	- `stress_tests.py`: runs the **RPS** algorithm on a failing edge case
 	- `compare_priority_policies.py`: Compares different prioritization policies on **RPS** and generates a LaTeX table summarizing schedulabilty results
 	- `compute_statistics.py`: Visualizes aggregate metrics computed from evaluation results data by task set utilization or by (number of processors and size of task set)
 	- `perform_chi_square.py`: Performs chi-square test to see if the replication deviates too much from the original results
