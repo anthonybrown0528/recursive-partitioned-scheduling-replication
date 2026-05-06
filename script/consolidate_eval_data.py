@@ -10,7 +10,8 @@ IN_DATA_FILE_EXT = '.npy'
 OUT_DATA_FILE_EXT = '.pqt'
 
 # Output data directory
-OUT_DATA_DIR = os.path.join(DATA_DIR, 'parquet')
+# NOTE: Adjust if a different output directory is desired
+OUT_DATA_DIR = os.path.join(DATA_DIR, 'input', 'parquet')
 
 # Create output directory if is does not already exist
 if not os.path.exists(OUT_DATA_DIR):
