@@ -76,7 +76,7 @@ python script/perform_chi_square.py
 ```
 
 ## Reference
-**This project is based on the following work**
+**This project is an attempt to replicate the following work**
 
 S. Lee, N. Guan and J. Lee, "Recursive Partitioned Scheduling for Real-Time Gang Tasks," 2025 IEEE Real-Time Systems Symposium (RTSS), Boston, MA, USA, 2025, pp. 135-147, doi: 10.1109/RTSS66672.2025.00020. keywords: {Processor scheduling;Instruction sets;Simulation;Interference;Computer architecture;Parallel processing;Real-time systems;Timing;Partitioning algorithms},
 
