@@ -57,6 +57,9 @@ def plot_by_taskset_util(data_attribute: str, ylabel: str, success=True):
     plt.show()
 
 def plot_by_taskset_size_processor_count(data_attribute: str, ylabel: str, success=True):
+    val1 = 0
+    val2 = 0
+
     for i, (name, df) in enumerate(data_map.items()):
         successful = df[df['success'] == success]
 
@@ -64,6 +67,10 @@ def plot_by_taskset_size_processor_count(data_attribute: str, ylabel: str, succe
         aggregate = view.groupby(by=['taskset_size', 'processor_count', 'taskset_util'])
 
         slack_mean = aggregate.mean()
+
+        if data_attribute == 'slack_mean':
+            val1 += slack_mean.loc[16, 16, TASKSET_UTIL]
+            val2 += slack_mean.loc[16, 8, TASKSET_UTIL]
 
         mean_subset = slack_mean.loc[:, :, TASKSET_UTIL]
         mean_subset = mean_subset.sort_index(level=1)
@@ -75,11 +82,16 @@ def plot_by_taskset_size_processor_count(data_attribute: str, ylabel: str, succe
 
         plt.bar(np.arange(len(x)) - (i * 2) * (width/2 + gap), mean_subset[data_attribute], width=width, tick_label=x, label=name)
 
+    if data_attribute == 'slack_mean':
+        print('(16, 8):', val1 / len(data_map.items()))
+        print('(8, 8)', val2 / len(data_map.items()))
+
     plt.title(data_attribute.replace('_', ' ').capitalize() + ' where $U_{gang} = ' + str(round((TASKSET_UTIL + 1) * 0.1, ndigits=1)) + 'm$')
     plt.ylabel(ylabel=ylabel)
     plt.xlabel(xlabel='(n, m)')
 
-    plt.ylim((0, 0.5))
+    # NOTE: Uncomment and adjust to see figures better if needed
+    # plt.ylim((0, 500))
     plt.legend(loc='best')
 
     plt.savefig(os.path.join(FIGURE_PATH, data_attribute + f'_u{TASKSET_UTIL}.png'))
@@ -95,7 +107,7 @@ TASKSET_UTIL = 5
 data_attributes = [
     # ('slack_mean', 'Average slack (ms)', True),
     # ('num_partitions', 'Number of Created Partitions', True),
-    # ('part_util_std', 'Partition Utilization Standard Deviation', True),
+    ('part_util_std', 'Partition Utilization Standard Deviation', True),
     ('norm_part_util_std', 'Normalized Partition Utilization Standard Deviation', True),
     # ('schedulable_tasks', '# Schedulable Tasks', False),
 ]
